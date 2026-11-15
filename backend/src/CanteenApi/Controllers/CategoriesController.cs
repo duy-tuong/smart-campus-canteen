@@ -10,7 +10,6 @@ namespace CanteenApi.Controllers;
 [ApiController]
 [Route("api/categories")]
 [Tags("Thực đơn — Danh mục")]
-[Produces("application/json")]
 public class CategoriesController(CategoryService categories, ICurrentUser me) : ControllerBase
 {
     /// <summary>Danh sách danh mục (sắp theo thứ tự hiển thị).</summary>

@@ -12,7 +12,6 @@ namespace CanteenApi.Controllers;
 [Route("api/admin/users")]
 [Authorize(Policy = Policies.AdminOnly)]
 [Tags("Quản trị người dùng")]
-[Produces("application/json")]
 public class AdminUsersController(UserService users, ICurrentUser me) : ControllerBase
 {
     /// <summary>Danh sách người dùng: tìm kiếm (không dấu), lọc theo vai trò/trạng thái, phân trang.</summary>

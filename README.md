@@ -258,6 +258,35 @@ Tài liệu đầy đủ (schema request/response, thử trực tiếp) có tạ
 - `minSelect ≤ maxSelect ≤ số tùy chọn`;
 - giá cộng thêm từ 0 đến 200.000đ.
 
+## Kiểm thử tự động
+
+```bash
+cd backend
+dotnet test
+```
+
+Bộ test nằm trong `backend/tests/CanteenApi.Tests` (xUnit), gồm **76 test, chạy khoảng 6 giây**. Test chạy **toàn bộ backend thật trong bộ nhớ** (`WebApplicationFactory`): routing, phân quyền, validate, EF Core và SQL Server thật. Chỉ một số phần được thay thế:
+
+| Thành phần | Trong test |
+|---|---|
+| SQL Server | Database riêng `SmartCanteenDb_Test`, tạo lại bằng migration mỗi lượt chạy, nạp lại dữ liệu mẫu trước **mỗi** test. Đổi chuỗi kết nối bằng biến môi trường `CANTEEN_TEST_DB` |
+| Xác thực Firebase | `TestAuthHandler` đọc danh tính giả từ header (`X-Test-Uid`, `X-Test-Role`…) |
+| Firebase Admin | `FakeFirebaseAuthService`: không gọi mạng, ghi lại thao tác gán vai trò và khóa tài khoản để kiểm tra |
+| Đồng hồ | `TestClock` cố định 10:00 ngày 16/11/2026 giờ Việt Nam, có thể tua sang ngày khác |
+| `wwwroot` | Thư mục tạm, tự xóa sau khi chạy (ảnh upload không làm bẩn source) |
+
+Không cần file service account và không cần Internet.
+
+| Nhóm test | Nội dung chính |
+|---|---|
+| `Unit/VietnamTimeTests` | Ranh giới ngày theo giờ Việt Nam (00:00 VN = 17:00 UTC hôm trước) |
+| `Unit/ImageSignatureTests` | Nhận diện JPEG/PNG/WebP bằng magic bytes. Chặn file text đổi đuôi, GIF, SVG |
+| `Api/AuthorizationTests` | 401/403 có mã lỗi rõ ràng. **Không tin claim role trong token** (token tự nhận admin vẫn bị chặn). Đổi vai trò có hiệu lực ngay |
+| `Api/UsersTests` | Tạo hồ sơ (gọi lại an toàn), trùng MSSV, validate, khóa MSSV, đăng nhập không đổi `UpdatedAt`, ảnh đại diện thay/gỡ có dọn file |
+| `Api/AdminUsersTests` | Phân trang, tìm không dấu, lọc, đổi vai trò và khóa tài khoản đồng bộ sang Firebase, không tự sửa chính mình |
+| `Api/CategoriesTests` | Hiển thị theo vai trò, trùng tên không dấu, sắp xếp, xóa mềm, tạo lại tên đã xóa |
+| `Api/FoodsTests` | Tìm/lọc/sắp xếp. **Số suất còn lại tính theo giờ Việt Nam qua nửa đêm**, bỏ đơn hủy, sang ngày mới tính lại. Bán chạy 30 ngày. Chống ghi đè khi sửa đồng thời. Tùy chọn. Xóa mềm giữ lịch sử đơn. Yêu thích theo từng người |
+
 ## Chạy mobile
 
 ```bash

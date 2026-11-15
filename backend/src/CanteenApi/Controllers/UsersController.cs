@@ -12,7 +12,6 @@ namespace CanteenApi.Controllers;
 [ApiController]
 [Route("api/users")]
 [Tags("Người dùng")]
-[Produces("application/json")]
 public class UsersController(UserService users, ICurrentUser me) : ControllerBase
 {
     /// <summary>Lấy hồ sơ của tôi (đồng thời ghi nhận thời điểm đăng nhập).</summary>

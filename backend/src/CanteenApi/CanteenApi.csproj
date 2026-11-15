@@ -23,4 +23,9 @@
     <None Update="SeedData\**" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- Cho project test gọi các hàm internal (ví dụ nhận diện magic bytes của ảnh). -->
+    <InternalsVisibleTo Include="CanteenApi.Tests" />
+  </ItemGroup>
+
 </Project>

@@ -11,7 +11,6 @@ namespace CanteenApi.Controllers;
 [ApiController]
 [Route("api/foods")]
 [Tags("Thực đơn — Món ăn")]
-[Produces("application/json")]
 public class FoodsController(FoodService foods, ICurrentUser me) : ControllerBase
 {
     /// <summary>Danh sách món: lọc theo danh mục/giá, tìm không dấu, sắp xếp, phân trang.</summary>
