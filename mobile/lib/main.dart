@@ -1,13 +1,18 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 
 import 'app.dart';
+import 'firebase_options.dart';
 
 /// Điểm khởi chạy ứng dụng.
 ///
-/// Các bước tiếp theo sẽ bổ sung tại đây:
-///   1. `await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform)`
-///   2. Bọc [CanteenApp] trong `MultiProvider` (Auth, Theme, Menu, Cart, OrderHistory).
-void main() {
+/// 1. Khởi tạo Firebase (cấu hình sinh bởi `flutterfire configure`).
+/// 2. (Bước sau) bọc [CanteenApp] trong `MultiProvider`
+///    (Auth, Theme, Menu, Cart, OrderHistory).
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
   runApp(const CanteenApp());
 }

@@ -67,6 +67,18 @@ dotnet user-secrets set "Firebase:CredentialPath" "<đường-dẫn-ngoài-repo>
 
 > ⚠️ File service account key **không bao giờ được commit** vào repo.
 
+### Endpoint khởi tạo dữ liệu (chỉ chạy ở môi trường Development)
+
+| Method | Endpoint | Mô tả |
+|---|---|---|
+| POST | `/api/admin/seed` | Nạp danh mục và món ăn từ `SeedData/menu.json` lên Realtime Database |
+| POST | `/api/admin/staff?email=...` | Cấp quyền nhân viên căn-tin (custom claim `role=staff`) cho tài khoản đã đăng ký |
+
+```bash
+curl -X POST http://localhost:5265/api/admin/seed
+curl -X POST "http://localhost:5265/api/admin/staff?email=staff@canteen.vn"
+```
+
 ## Chạy mobile
 
 ```bash

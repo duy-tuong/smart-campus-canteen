@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "839479899447",
+    "firebase_url": "https://smart-campus-canteen-64384-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "smart-campus-canteen-64384",
+    "storage_bucket": "smart-campus-canteen-64384.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:839479899447:android:ac4512b8da340d267356b2",
+        "android_client_info": {
+          "package_name": "vn.edu.smartcanteen.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBhoYxlD4J2yoY4Bb35ZO1XR65M1dT8rP4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

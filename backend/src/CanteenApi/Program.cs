@@ -1,3 +1,4 @@
+using CanteenApi.Auth;
 using CanteenApi.Options;
 using Scalar.AspNetCore;
 
@@ -11,9 +12,10 @@ builder.Services.Configure<FirebaseOptions>(
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 
-// TODO (bước sau):
-//  - AddAuthentication().AddJwtBearer(...) xác minh Firebase ID token (thư mục Auth/)
-//  - Đăng ký FirebaseDbService, FoodService, OrderService (thư mục Services/)
+// Firebase: credential, Admin SDK, Realtime Database (REST), xác thực JWT ID token.
+builder.Services.AddFirebase(builder.Configuration);
+
+// TODO (bước sau): đăng ký FoodService, OrderService (thư mục Services/)
 
 var app = builder.Build();
 
