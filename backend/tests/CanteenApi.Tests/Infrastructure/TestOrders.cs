@@ -28,8 +28,8 @@ public static class TestOrders
             db.Orders.Add(new Order
             {
                 Id = id,
-                // Mã nhận món duy nhất (UNIQUE PickupDate + PickupCode).
-                PickupCode = $"T{Interlocked.Increment(ref _sequence) % 1000:000}",
+                // Mã nhận món dạng số, duy nhất (UNIQUE PickupDate + PickupCode); dải 500+ để không trùng mã do API cấp.
+                PickupCode = (500 + Interlocked.Increment(ref _sequence) % 400).ToString("000"),
                 PickupDate = DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeFromUtc(createdAtUtc, VietnamTime.Zone)),
                 UserId = userId,
                 Status = status,

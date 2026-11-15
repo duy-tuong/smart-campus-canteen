@@ -8,6 +8,7 @@ using CanteenApi.OpenApi;
 using CanteenApi.Options;
 using CanteenApi.Services;
 using CanteenApi.Services.Ordering;
+using CanteenApi.Services.Payments;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
@@ -23,6 +24,10 @@ builder.Services.AddOptions<CanteenOptions>()
     .Validate(o => o.CloseTime > o.OpenTime, "Canteen:CloseTime phải sau Canteen:OpenTime.")
     .ValidateOnStart();
 builder.Services.Configure<PayOsOptions>(builder.Configuration.GetSection(PayOsOptions.SectionName));
+builder.Services.AddOptions<WorkerOptions>()
+    .Bind(builder.Configuration.GetSection(WorkerOptions.SectionName))
+    .ValidateDataAnnotations()
+    .ValidateOnStart();
 
 // ---------- MVC + JSON + lỗi chuẩn ----------
 builder.Services
@@ -75,6 +80,19 @@ builder.Services.AddScoped<CategoryService>();
 builder.Services.AddScoped<FoodService>();
 builder.Services.AddScoped<VoucherService>();
 builder.Services.AddScoped<OrderPricingService>();
+builder.Services.AddScoped<OrderService>();
+builder.Services.AddScoped<OrderLifecycleService>();
+builder.Services.AddScoped<PaymentService>();
+
+// ---------- Thanh toán payOS ----------
+builder.Services.AddSingleton<IPaymentGateway, PayOsGateway>();
+
+// ---------- Tác vụ chạy nền (tắt trong môi trường test bằng Workers:Enabled=false) ----------
+builder.Services.AddSingleton<PaymentStatusPoller>();
+if (builder.Configuration.GetValue("Workers:Enabled", true))
+{
+    builder.Services.AddHostedService(sp => sp.GetRequiredService<PaymentStatusPoller>());
+}
 
 var app = builder.Build();
 

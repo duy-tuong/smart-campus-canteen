@@ -280,6 +280,79 @@ Tài liệu đầy đủ (schema request/response, thử trực tiếp) có tạ
 
 **Thời gian:** mọi thời điểm trong API là UTC dạng ISO 8601 có hậu tố `Z`, ví dụ `2026-11-16T03:00:00Z`. App tự đổi sang giờ Việt Nam khi hiển thị.
 
+### Đặt món & đơn hàng
+
+| Method | Endpoint | Quyền | Mô tả |
+|---|---|---|---|
+| POST | `/api/orders` | ActiveUser | Đặt món. Body: `items[]`, `voucherCode?`, `paymentMethod` (`cash` hoặc `bankTransfer`), `pickupTime?`, `note?`. **Bắt buộc header `Idempotency-Key`** (GUID). Trả 201, hoặc 200 nếu key đã dùng |
+| GET | `/api/orders/me` | ActiveUser | Đơn của tôi: `status` = `active` / `completed` / `cancelled`, phân trang, mới nhất trước, kèm `itemsPreview` |
+| GET | `/api/orders/{id}` | Chủ đơn hoặc Staff/Admin | Chi tiết: món + tùy chọn, dòng thời gian trạng thái, thanh toán, thông tin khách, `canCancel`. Người khác gọi thì trả 404 |
+| GET | `/api/orders` | Staff/Admin | Bảng đơn theo ngày (`date`, mặc định hôm nay), `status` (nhiều giá trị), `paymentStatus`, `q` (`#015`, tên không dấu, MSSV). Đơn cần giao sớm nhất lên đầu |
+
+**Quy tắc khi đặt món:**
+- **Giờ mở cửa:** ngoài giờ trả 422 `CANTEEN_CLOSED`.
+- **Giờ hẹn lấy món:** phải trong hôm nay, trong giờ mở cửa, và không sớm hơn bây giờ + max(thời gian chế biến lâu nhất, 10 phút). Sai thì trả 422 `PICKUP_TIME_INVALID`.
+- **Số đơn đang xử lý:** mỗi người tối đa 3 đơn chưa hoàn thành, vượt thì trả 422 `TOO_MANY_ACTIVE_ORDERS`.
+- **Giỏ hàng:** món hoặc tùy chọn không hợp lệ, hoặc hết suất, trả 422 `ORDER_ITEMS_INVALID` kèm `items[]` (lỗi theo dòng như khi báo giá).
+- **Voucher:** gửi mã sai khi đặt món thì báo lỗi `VOUCHER_*`. Hệ thống không âm thầm tính đủ tiền.
+- **Chuyển khoản:** chưa bật payOS thì trả 422 `PAYMENT_METHOD_UNAVAILABLE`.
+
+**Chống bán quá suất và trùng mã:**
+- Đơn được tạo trong một transaction có **khóa ứng dụng của SQL Server** (`sp_getapplock`), nên các đơn được tạo tuần tự.
+- Test 10 request song song với món còn 5 suất cho kết quả đúng 5 đơn, mã `001`–`005`.
+- Khi tạm tắt khóa, test này FAIL. Như vậy test thật sự kiểm tra được khóa.
+
+**Mã nhận món:** số thứ tự trong ngày theo giờ Việt Nam (`001`, `002`…), sang ngày mới bắt đầu lại từ `001`. Database đảm bảo không trùng bằng `UNIQUE(PickupDate, PickupCode)`.
+
+**Giờ dự kiến xong:** bây giờ + thời gian chế biến lâu nhất + 2 phút cho mỗi đơn đang chờ trước. Nếu có giờ hẹn muộn hơn thì lấy giờ hẹn.
+
+### Thanh toán chuyển khoản (payOS)
+
+| Method | Endpoint | Quyền | Mô tả |
+|---|---|---|---|
+| POST | `/api/orders` với `paymentMethod: "bankTransfer"` | ActiveUser | Tạo đơn kèm link payOS. `payment` trả về `qrCode` (chuỗi VietQR để app vẽ QR), `checkoutUrl`, `transferContent`, số tài khoản, `expiresAt` (15 phút) |
+| POST | `/api/orders/{id}/payment/sync` | Chủ đơn hoặc Staff | Hỏi payOS ngay (nút "Tôi đã chuyển khoản"), trả chi tiết đơn |
+| POST | `/api/orders/{id}/payment/confirm` | Staff/Admin | Xác nhận tay đã nhận tiền, đồng thời hủy link payOS để khách không trả thêm |
+| POST | `/api/payments/payos/webhook` | payOS gọi (ẩn danh) | Chữ ký được xác thực bằng checksum key. Sai chữ ký trả 400 `INVALID_WEBHOOK` |
+| POST | `/api/admin/payos/confirm-webhook` | Admin | Đăng ký URL webhook với payOS (cần URL public) |
+| GET | `/payment/result` | Ẩn danh | Trang `returnUrl`/`cancelUrl`: kiểm tra ngay với payOS, báo người dùng quay lại app |
+
+**Luồng thanh toán:**
+1. Đơn được tạo và commit trước (đã giữ suất và voucher).
+2. Sau đó backend tạo link payOS, **không giữ khóa trong lúc gọi mạng**.
+3. Nếu payOS lỗi: đơn tự hủy (hoàn suất, hoàn voucher) và trả 502 `PAYMENT_PROVIDER_ERROR`.
+
+**Ba đường xác nhận đã nhận tiền**, cùng đi qua một hàm idempotent `MarkPaidAsync`:
+- **Webhook:** payOS gọi vào khi có URL public.
+- **Poller chạy nền:** hỏi payOS mỗi 10 giây (`Workers:PaymentPollSeconds`). Đường này **bắt buộc khi chạy local**, vì payOS không gọi được vào `localhost`.
+- **Staff xác nhận tay.**
+
+Hàm `MarkPaidAsync` bảo đảm:
+- webhook gửi lại hoặc chạy song song với poller vẫn chỉ ghi nhận một lần (`RowVersion` + UNIQUE `TransactionRef`);
+- chuyển khoản thiếu tiền thì không chuyển sang Paid;
+- tiền về sau khi đơn đã hủy thì ghi `Refunded` để staff hoàn tiền thủ công.
+
+`orderCode` gửi payOS = `yyMMdd × 10000 + số thứ tự trong ngày` (ví dụ `2611160015`). Nội dung chuyển khoản = `SC` + 7 số cuối (≤ 9 ký tự theo giới hạn payOS).
+
+**Cấu hình payOS:**
+1. Lấy Client ID / API Key / Checksum Key tại my.payos.vn, mục **Kênh thanh toán**.
+2. Lưu vào user-secrets (**không commit**):
+
+```bash
+cd backend/src/CanteenApi
+dotnet user-secrets set "PayOS:ClientId" "<Client ID>"
+dotnet user-secrets set "PayOS:ApiKey" "<API Key>"
+dotnet user-secrets set "PayOS:ChecksumKey" "<Checksum Key>"
+dotnet user-secrets set "PayOS:Enabled" "true"
+```
+
+Muốn nhận webhook khi chạy local:
+1. Mở tunnel, ví dụ `cloudflared tunnel --url http://localhost:5265`.
+2. Đặt `Canteen:PublicBaseUrl` bằng URL tunnel.
+3. Admin gọi `POST /api/admin/payos/confirm-webhook`.
+
+Không có tunnel thì poller vẫn tự xác nhận, chậm tối đa khoảng 10 giây.
+
 ### Cấu hình vận hành căn-tin (`appsettings.json`)
 
 | Khóa | Mặc định | Ý nghĩa |
@@ -292,6 +365,12 @@ Tài liệu đầy đủ (schema request/response, thử trực tiếp) có tạ
 | `Canteen:PublicBaseUrl` | (trống) | URL public (tunnel) cho returnUrl/webhook payOS |
 | `PayOS:Enabled` | `false` | Bật thanh toán chuyển khoản qua payOS. Khóa đặt trong user-secrets |
 
+Ghi đè cấu hình bằng biến môi trường (dùng `__` thay cho `:`), không cần sửa file. Ví dụ để demo sau 19:00:
+
+```bash
+Canteen__CloseTime=23:59 dotnet run --project src/CanteenApi --launch-profile http
+```
+
 ## Kiểm thử tự động
 
 ```bash
@@ -299,13 +378,14 @@ cd backend
 dotnet test
 ```
 
-Bộ test nằm trong `backend/tests/CanteenApi.Tests` (xUnit), gồm **110 test, chạy khoảng 7 giây**. Test chạy **toàn bộ backend thật trong bộ nhớ** (`WebApplicationFactory`): routing, phân quyền, validate, EF Core và SQL Server thật. Chỉ một số phần được thay thế:
+Bộ test nằm trong `backend/tests/CanteenApi.Tests` (xUnit), gồm **147 test, chạy khoảng 10 giây**. Test chạy **toàn bộ backend thật trong bộ nhớ** (`WebApplicationFactory`): routing, phân quyền, validate, EF Core và SQL Server thật. Chỉ một số phần được thay thế:
 
 | Thành phần | Trong test |
 |---|---|
 | SQL Server | Database riêng `SmartCanteenDb_Test`, tạo lại bằng migration mỗi lượt chạy, nạp lại dữ liệu mẫu trước **mỗi** test. Đổi chuỗi kết nối bằng biến môi trường `CANTEEN_TEST_DB` |
 | Xác thực Firebase | `TestAuthHandler` đọc danh tính giả từ header (`X-Test-Uid`, `X-Test-Role`…) |
 | Firebase Admin | `FakeFirebaseAuthService`: không gọi mạng, ghi lại thao tác gán vai trò và khóa tài khoản để kiểm tra |
+| payOS | `FakePaymentGateway`: không gọi mạng, dựng được kịch bản đã trả tiền, payOS lỗi, webhook sai chữ ký |
 | Đồng hồ | `TestClock` cố định 10:00 ngày 16/11/2026 giờ Việt Nam, có thể tua sang ngày khác |
 | `wwwroot` | Thư mục tạm, tự xóa sau khi chạy (ảnh upload không làm bẩn source) |
 

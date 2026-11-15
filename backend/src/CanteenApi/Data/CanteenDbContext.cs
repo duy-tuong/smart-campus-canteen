@@ -16,8 +16,14 @@ namespace CanteenApi.Data;
 ///
 /// Cấu hình chi tiết (kiểu cột, CHECK, UNIQUE, FK, index) nằm trong thư mục Data/Configurations.
 /// </summary>
-public class CanteenDbContext(DbContextOptions<CanteenDbContext> options) : DbContext(options)
+public class CanteenDbContext(DbContextOptions<CanteenDbContext> options, TimeProvider? clock = null) : DbContext(options)
 {
+    /// <summary>
+    /// Nguồn thời gian DUY NHẤT của hệ thống (qua DI). CreatedAt/UpdatedAt phải cùng đồng hồ với nghiệp vụ
+    /// ("hôm nay", số suất đã bán...), nếu không đơn vừa tạo có thể bị tính sang ngày khác.
+    /// </summary>
+    private readonly TimeProvider _clock = clock ?? TimeProvider.System;
+
     public DbSet<AppUser> Users => Set<AppUser>();
     public DbSet<Category> Categories => Set<Category>();
     public DbSet<Food> Foods => Set<Food>();
@@ -68,7 +74,7 @@ public class CanteenDbContext(DbContextOptions<CanteenDbContext> options) : DbCo
     /// <summary>Tự gán CreatedAt/UpdatedAt (UTC) cho các entity <see cref="IAuditable"/>.</summary>
     private void ApplyTimestamps()
     {
-        var now = DateTime.UtcNow;
+        var now = _clock.GetUtcNow().UtcDateTime;
         foreach (var entry in ChangeTracker.Entries<IAuditable>())
         {
             if (entry.State == EntityState.Added)

@@ -32,6 +32,7 @@ public class DevController(
     IHttpClientFactory httpClientFactory,
     IOptions<FirebaseOptions> firebaseOptions,
     IWebHostEnvironment env,
+    TimeProvider clock,
     ILogger<DevController> logger) : ControllerBase
 {
     private static readonly JsonSerializerOptions SeedJson = new(JsonSerializerDefaults.Web)
@@ -60,7 +61,7 @@ public class DevController(
         }
 
         var seed = await ReadSeedAsync(ct);
-        var now = DateTime.UtcNow;
+        var now = clock.GetUtcNow().UtcDateTime;
 
         db.Categories.AddRange(seed.Categories); // EF chèn lồng cả Foods → OptionGroups → Options
         db.Vouchers.AddRange(seed.Vouchers.Select(v => new Voucher
@@ -154,7 +155,7 @@ public class DevController(
         var updated = await db.Users.Where(u => u.Id == user.Uid)
             .ExecuteUpdateAsync(s => s
                 .SetProperty(u => u.Role, role)
-                .SetProperty(u => u.UpdatedAt, DateTime.UtcNow), ct);
+                .SetProperty(u => u.UpdatedAt, clock.GetUtcNow().UtcDateTime), ct);
         accessCache.Invalidate(user.Uid);
 
         return Ok(new { user.Uid, email, role = role.ToString(), profileUpdated = updated > 0 });

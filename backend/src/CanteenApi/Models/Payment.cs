@@ -40,4 +40,13 @@ public class Payment
 
     /// <summary>Hạn của link thanh toán.</summary>
     public DateTime? ExpiresAt { get; set; }
+
+    /// <summary>Nội dung chuyển khoản (≤ 9 ký tự, ví dụ "SC1160001") — để người dùng tự chuyển khi không quét được QR.</summary>
+    public string? TransferContent { get; set; }
+
+    /// <summary>Mã BIN ngân hàng nhận tiền (VietQR).</summary>
+    public string? BankBin { get; set; }
+
+    public string? BankAccountNumber { get; set; }
+    public string? BankAccountName { get; set; }
 }

@@ -17,6 +17,8 @@ namespace CanteenApi.Tests.Infrastructure;
 ///  - SQL Server: database riêng SmartCanteenDb_Test (tạo lại bằng migration mỗi lượt chạy)
 ///  - Xác thực: TestAuthHandler thay cho Firebase JWT
 ///  - Firebase Admin: FakeFirebaseAuthService (không gọi mạng)
+///  - payOS: FakePaymentGateway (không gọi mạng, dựng được kịch bản đã trả tiền / lỗi)
+///  - Tác vụ chạy nền: tắt (test gọi trực tiếp RunOnceAsync)
 ///  - Đồng hồ: TestClock cố định 10:00 sáng 16/11/2026 giờ Việt Nam
 ///  - wwwroot: thư mục tạm (ảnh upload khi test không làm bẩn source)
 /// Không cần file service account, không cần Internet.
@@ -33,6 +35,7 @@ public sealed class CanteenApiFactory : WebApplicationFactory<Program>, IAsyncLi
     private readonly string _webRoot = Path.Combine(Path.GetTempPath(), "canteen-tests-" + Guid.NewGuid().ToString("N"));
 
     public FakeFirebaseAuthService Firebase { get; } = new();
+    public FakePaymentGateway Payments { get; } = new();
     public TestClock Clock { get; } = new(Now);
     public string WebRoot => _webRoot;
 
@@ -47,6 +50,7 @@ public sealed class CanteenApiFactory : WebApplicationFactory<Program>, IAsyncLi
         builder.UseSetting("Firebase:ProjectId", "test-project");
         builder.UseSetting("Firebase:DatabaseUrl", "");
         builder.UseSetting("Firebase:CredentialPath", "");
+        builder.UseSetting("Workers:Enabled", "false"); // test tự gọi từng lượt worker
 
         builder.ConfigureTestServices(services =>
         {
@@ -60,6 +64,9 @@ public sealed class CanteenApiFactory : WebApplicationFactory<Program>, IAsyncLi
 
             services.RemoveAll<IFirebaseAuthService>();
             services.AddSingleton<IFirebaseAuthService>(Firebase);
+
+            services.RemoveAll<CanteenApi.Services.Payments.IPaymentGateway>();
+            services.AddSingleton<CanteenApi.Services.Payments.IPaymentGateway>(Payments);
 
             services.RemoveAll<TimeProvider>();
             services.AddSingleton<TimeProvider>(Clock);
@@ -80,6 +87,7 @@ public sealed class CanteenApiFactory : WebApplicationFactory<Program>, IAsyncLi
     {
         Clock.Set(Now);
         Firebase.Reset();
+        Payments.Reset();
         ((MemoryCache)Services.GetRequiredService<IMemoryCache>()).Compact(1.0); // xóa cache phân quyền
 
         await using var scope = Services.CreateAsyncScope();

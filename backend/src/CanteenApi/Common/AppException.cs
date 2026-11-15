@@ -8,6 +8,15 @@ public class AppException(int statusCode, string code, string message) : Excepti
 {
     public int StatusCode { get; } = statusCode;
     public string Code { get; } = code;
+
+    /// <summary>Trường bổ sung đưa vào ProblemDetails (ví dụ "items": lỗi theo từng dòng giỏ hàng).</summary>
+    public Dictionary<string, object?> Extensions { get; } = [];
+
+    public AppException With(string key, object? value)
+    {
+        Extensions[key] = value;
+        return this;
+    }
 }
 
 /// <summary>400 — dữ liệu gửi lên không hợp lệ (ngoài validate DTO tự động).</summary>

@@ -40,12 +40,20 @@ public static class Problems
         problem.Extensions["traceId"] = Activity.Current?.Id ?? http.TraceIdentifier;
 
     /// <summary>Ghi ProblemDetails ra response (dùng ở middleware/handler, nơi không có IActionResult).</summary>
-    public static Task WriteAsync(HttpContext http, int status, string code, string? detail)
+    public static Task WriteAsync(
+        HttpContext http, int status, string code, string? detail,
+        IReadOnlyDictionary<string, object?>? extensions = null)
     {
+        var problem = Create(http, status, code, detail);
+        foreach (var (key, value) in extensions ?? new Dictionary<string, object?>())
+            problem.Extensions[key] = value;
+
         http.Response.StatusCode = status;
+        // Dùng JsonOptions của MVC để trường mở rộng cũng theo camelCase + enum dạng chuỗi như mọi response khác.
+        var json = http.RequestServices.GetService<Microsoft.Extensions.Options.IOptions<Microsoft.AspNetCore.Mvc.JsonOptions>>();
         return http.Response.WriteAsJsonAsync(
-            Create(http, status, code, detail),
-            options: null,
+            problem,
+            options: json?.Value.JsonSerializerOptions,
             contentType: "application/problem+json");
     }
 }

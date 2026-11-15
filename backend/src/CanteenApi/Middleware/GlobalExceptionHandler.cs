@@ -47,7 +47,7 @@ public sealed class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logge
 
         if (status == 499) return true; // client đã hủy request, không cần ghi response
 
-        await Problems.WriteAsync(http, status, code, detail);
+        await Problems.WriteAsync(http, status, code, detail, (exception as AppException)?.Extensions);
         return true;
     }
 }

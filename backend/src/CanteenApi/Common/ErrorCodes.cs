@@ -37,6 +37,15 @@ public static class ErrorCodes
 
     // Giỏ hàng / đặt món (lỗi theo từng dòng trả trong extension "items")
     public const string OrderItemsInvalid = "ORDER_ITEMS_INVALID";
+    public const string CanteenClosed = "CANTEEN_CLOSED";
+    public const string PickupTimeInvalid = "PICKUP_TIME_INVALID";
+    public const string TooManyActiveOrders = "TOO_MANY_ACTIVE_ORDERS";
+    public const string PaymentMethodUnavailable = "PAYMENT_METHOD_UNAVAILABLE";
+
+    // Thanh toán
+    public const string PaymentProviderError = "PAYMENT_PROVIDER_ERROR";
+    public const string PaymentNotPending = "PAYMENT_NOT_PENDING";
+    public const string InvalidWebhook = "INVALID_WEBHOOK";
     public const string ItemUnavailable = "ITEM_UNAVAILABLE";
     public const string ItemSoldOut = "ITEM_SOLD_OUT";
     public const string OptionInvalid = "OPTION_INVALID";

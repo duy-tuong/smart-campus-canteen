@@ -36,6 +36,18 @@ public sealed class CanteenOptions
     public string? PublicBaseUrl { get; set; }
 }
 
+/// <summary>Các tác vụ chạy nền (section "Workers"). Môi trường test tắt để tự gọi từng lượt.</summary>
+public sealed class WorkerOptions
+{
+    public const string SectionName = "Workers";
+
+    public bool Enabled { get; set; } = true;
+
+    /// <summary>Chu kỳ hỏi payOS trạng thái các khoản chuyển khoản đang chờ (giây).</summary>
+    [Range(3, 600)]
+    public int PaymentPollSeconds { get; set; } = 10;
+}
+
 /// <summary>Cấu hình cổng thanh toán payOS (section "PayOS"). Các khóa đặt trong user-secrets.</summary>
 public sealed class PayOsOptions
 {

@@ -16,7 +16,8 @@ public class OrderStatusHistory
 
     public OrderStatus ToStatus { get; set; }
 
-    public string ChangedByUserId { get; set; } = string.Empty;
+    /// <summary>Người đổi trạng thái; null = hệ thống tự động (ví dụ tự hủy đơn quá hạn thanh toán).</summary>
+    public string? ChangedByUserId { get; set; }
     public AppUser? ChangedByUser { get; set; }
 
     public string? Note { get; set; }

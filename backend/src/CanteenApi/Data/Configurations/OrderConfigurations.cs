@@ -159,6 +159,10 @@ public class PaymentConfiguration : IEntityTypeConfiguration<Payment>
         e.Property(x => x.PaymentLinkId).HasMaxLength(64).IsUnicode(false);
         e.Property(x => x.CheckoutUrl).HasMaxLength(500).IsUnicode(false);
         e.Property(x => x.QrCode).HasMaxLength(1000).IsUnicode(false);
+        e.Property(x => x.TransferContent).HasMaxLength(50).IsUnicode(false);
+        e.Property(x => x.BankBin).HasMaxLength(20).IsUnicode(false);
+        e.Property(x => x.BankAccountNumber).HasMaxLength(30).IsUnicode(false);
+        e.Property(x => x.BankAccountName).HasMaxLength(100);
         e.Property(x => x.CreatedAt).HasDefaultValueSql("SYSUTCDATETIME()");
 
         // Mỗi orderCode của payOS ứng với đúng một giao dịch.
