@@ -22,6 +22,21 @@ public class Review : IAuditable
 
     public string? Comment { get; set; }
 
+    // ----- Kiểm duyệt (staff/admin) -----
+
+    /// <summary>true = bị ẩn khỏi danh sách công khai và KHÔNG tính vào điểm trung bình của món.</summary>
+    public bool IsHidden { get; set; }
+
+    /// <summary>Lý do ẩn (bắt buộc khi IsHidden) — tác giả xem được.</summary>
+    public string? HiddenReason { get; set; }
+
+    // ----- Phản hồi của căn-tin -----
+
+    public string? StaffReply { get; set; }
+    public DateTime? RepliedAt { get; set; }
+    public string? RepliedByUserId { get; set; }
+    public AppUser? RepliedByUser { get; set; }
+
     public DateTime CreatedAt { get; set; }
     public DateTime UpdatedAt { get; set; }
 }

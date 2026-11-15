@@ -26,6 +26,10 @@ builder.Services.AddOptions<CanteenOptions>()
     .Validate(o => o.CloseTime > o.OpenTime, "Canteen:CloseTime phải sau Canteen:OpenTime.")
     .ValidateOnStart();
 builder.Services.Configure<PayOsOptions>(builder.Configuration.GetSection(PayOsOptions.SectionName));
+builder.Services.AddOptions<ReviewOptions>()
+    .Bind(builder.Configuration.GetSection(ReviewOptions.SectionName))
+    .ValidateDataAnnotations()
+    .ValidateOnStart();
 builder.Services.AddOptions<WorkerOptions>()
     .Bind(builder.Configuration.GetSection(WorkerOptions.SectionName))
     .ValidateDataAnnotations()
@@ -86,6 +90,7 @@ builder.Services.AddScoped<OrderService>();
 builder.Services.AddScoped<OrderLifecycleService>();
 builder.Services.AddScoped<PaymentService>();
 builder.Services.AddScoped<NotificationService>();
+builder.Services.AddScoped<CanteenApi.Services.Reviews.ReviewService>();
 
 // ---------- Đồng bộ realtime lên Firebase (hàng đợi trong bộ nhớ + worker ghi nền) ----------
 builder.Services.AddSingleton<RealtimeQueue>();

@@ -54,4 +54,21 @@ public static class TestOrders
             await db.Orders.Where(o => o.Id == id).ExecuteUpdateAsync(s => s.SetProperty(o => o.CreatedAt, createdAtUtc));
             return id;
         });
+
+    /// <summary>Thêm một dòng món vào đơn đã có (giữ đúng ràng buộc tổng tiền của đơn).</summary>
+    public static Task AddItemAsync(CanteenApiFactory factory, string orderId, string foodName, int quantity) =>
+        factory.WithDbAsync(async db =>
+        {
+            var food = await db.Foods.SingleAsync(f => f.Name == foodName);
+            var order = await db.Orders.SingleAsync(o => o.Id == orderId);
+            var line = food.Price * quantity;
+            db.OrderItems.Add(new OrderItem
+            {
+                OrderId = orderId, FoodId = food.Id, FoodName = food.Name, UnitPrice = food.Price,
+                Quantity = quantity, LineTotal = line,
+            });
+            order.Subtotal += line;
+            order.TotalAmount += line;
+            await db.SaveChangesAsync();
+        });
 }

@@ -33,7 +33,8 @@ public sealed class NotificationService(CanteenDbContext db, IRealtimePublisher 
             OrderEvent.Paid => ($"Đã nhận thanh toán {code}", $"Căn-tin đã nhận {Money.Format(order.TotalAmount)}. Món của bạn sẽ sớm được chế biến."),
             OrderEvent.Cooking => ($"Đơn {code} đang được chế biến", "Căn-tin đang chuẩn bị món của bạn."),
             OrderEvent.Ready => ("Mời bạn nhận món", $"Đơn {code} đã xong. Mời bạn đến quầy nhận món!"),
-            OrderEvent.Completed => ($"Đơn {code} đã hoàn thành", "Cảm ơn bạn! Chúc bạn ngon miệng."),
+            OrderEvent.Completed => ($"Đơn {code} đã hoàn thành",
+                "Cảm ơn bạn! Chúc bạn ngon miệng. Hãy đánh giá món để giúp căn-tin phục vụ tốt hơn."),
             OrderEvent.Cancelled when order.PaymentStatus == PaymentStatus.Refunded =>
                 ($"Đơn {code} đã bị hủy", $"Lý do: {order.CancelReason}. Căn-tin sẽ hoàn lại {Money.Format(order.TotalAmount)} cho bạn."),
             OrderEvent.Cancelled => ($"Đơn {code} đã bị hủy", $"Lý do: {order.CancelReason}."),
@@ -47,6 +48,22 @@ public sealed class NotificationService(CanteenDbContext db, IRealtimePublisher 
             Body = Truncate(body, 500),
             Type = NotificationType.OrderStatus,
             RefId = order.Id,
+            CreatedAt = clock.GetUtcNow().UtcDateTime,
+        };
+        db.Notifications.Add(notification);
+        return notification;
+    }
+
+    /// <summary>Tạo (chưa lưu) thông báo "căn-tin đã trả lời đánh giá" cho tác giả.</summary>
+    public Notification ForReviewReply(Review review, string foodName)
+    {
+        var notification = new Notification
+        {
+            UserId = review.UserId,
+            Title = "Căn-tin đã trả lời đánh giá của bạn",
+            Body = Truncate($"Về món {foodName}: \"{review.StaffReply}\"", 500),
+            Type = NotificationType.Review,
+            RefId = review.FoodId.ToString(),
             CreatedAt = clock.GetUtcNow().UtcDateTime,
         };
         db.Notifications.Add(notification);

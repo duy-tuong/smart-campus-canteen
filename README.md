@@ -400,6 +400,30 @@ SQL Server là nguồn dữ liệu chính. Firebase chỉ giữ **bản sao đ�
 - người khác đọc đơn hoặc thông báo của sinh viên bị chặn `Permission denied`;
 - sinh viên không đọc được toàn bộ `orders`.
 
+### Đánh giá món
+
+| Method | Endpoint | Quyền | Mô tả |
+|---|---|---|---|
+| GET | `/api/foods/{id}/reviews` | ActiveUser | Đánh giá công khai (không gồm đánh giá bị ẩn): `rating`, `sort` = `newest` / `rating_desc` / `rating_asc`, phân trang. Kèm `summary` (`average`, `count`, `distribution` theo 5→1 sao). Tên tác giả rút gọn dạng "An N." |
+| GET | `/api/orders/{id}/reviews` | Chủ đơn | Màn "Đánh giá đơn hàng": các món (gộp dòng trùng món), đánh giá của tôi, `canReview`, `reviewDeadline` |
+| POST | `/api/orders/{id}/reviews` | Chủ đơn | `{ foodId, rating (1–5), comment? (≤500) }`, trả 201 |
+| PUT / DELETE | `/api/reviews/{id}` | Tác giả | Sửa (trong hạn, chưa bị ẩn) / xóa (bất cứ lúc nào) |
+| GET | `/api/users/me/reviews` | ActiveUser | Đánh giá của tôi, kể cả đánh giá bị ẩn kèm lý do |
+| GET | `/api/admin/reviews` | Staff/Admin | Lọc `foodId`, `rating`, `isHidden`, `hasReply` (`false` = cần trả lời), `q` (nội dung không dấu) |
+| PATCH | `/api/admin/reviews/{id}/visibility` | Staff/Admin | `{ isHidden, reason }`. Ẩn bắt buộc có lý do (CHECK trong database) |
+| PUT / DELETE | `/api/admin/reviews/{id}/reply` | Staff/Admin | Trả lời / gỡ trả lời. Tác giả nhận thông báo loại `review` (realtime qua Firebase) |
+
+**Quy tắc đánh giá:**
+- Chỉ **chủ đơn** đánh giá được. Đơn phải **đã hoàn thành**, và món phải có trong đơn.
+- Mỗi món mỗi đơn một đánh giá (`UNIQUE(OrderId, FoodId)`).
+- Viết và sửa trong **7 ngày** sau khi nhận món (`Reviews:EditWindowDays`). Quá hạn trả 422 `REVIEW_WINDOW_CLOSED`.
+- Mã lỗi khác: `REVIEW_NOT_ALLOWED`, `REVIEW_EXISTS` (409), `REVIEW_HIDDEN` (sửa đánh giá đã bị ẩn).
+
+**Điểm sao của món** (`averageRating`, `ratingCount` trên menu):
+- Được **tính lại từ đầu bằng một câu UPDATE** sau mỗi lần tạo, sửa, xóa, ẩn hoặc hiện đánh giá.
+- Chỉ tính đánh giá không bị ẩn, làm tròn 2 chữ số.
+- Vì tính lại từ đầu chứ không cộng trừ dần, nhiều người đánh giá cùng lúc vẫn ra số đúng (có test 10 đánh giá song song).
+
 ### Cấu hình vận hành căn-tin (`appsettings.json`)
 
 | Khóa | Mặc định | Ý nghĩa |
@@ -411,6 +435,7 @@ SQL Server là nguồn dữ liệu chính. Firebase chỉ giữ **bản sao đ�
 | `Canteen:MinPickupLeadMinutes` | 10 | Giờ hẹn lấy món tối thiểu sau lúc đặt |
 | `Canteen:PublicBaseUrl` | (trống) | URL public (tunnel) cho returnUrl/webhook payOS |
 | `PayOS:Enabled` | `false` | Bật thanh toán chuyển khoản qua payOS. Khóa đặt trong user-secrets |
+| `Reviews:EditWindowDays` | 7 | Số ngày sau khi nhận món được viết/sửa đánh giá |
 | `Workers:Enabled` | `true` | Bật các tác vụ chạy nền (poller payOS, tự hủy đơn quá hạn, đồng bộ Firebase) |
 | `Workers:PaymentPollSeconds` | 10 | Chu kỳ hỏi payOS trạng thái thanh toán |
 
@@ -427,7 +452,7 @@ cd backend
 dotnet test
 ```
 
-Bộ test nằm trong `backend/tests/CanteenApi.Tests` (xUnit), gồm **164 test, chạy khoảng 11 giây**. Test chạy **toàn bộ backend thật trong bộ nhớ** (`WebApplicationFactory`): routing, phân quyền, validate, EF Core và SQL Server thật. Chỉ một số phần được thay thế:
+Bộ test nằm trong `backend/tests/CanteenApi.Tests` (xUnit), gồm **180 test, chạy khoảng 13 giây**. Test chạy **toàn bộ backend thật trong bộ nhớ** (`WebApplicationFactory`): routing, phân quyền, validate, EF Core và SQL Server thật. Chỉ một số phần được thay thế:
 
 | Thành phần | Trong test |
 |---|---|
@@ -450,6 +475,7 @@ Không cần file service account và không cần Internet.
 | `Api/UsersTests` | Tạo hồ sơ (gọi lại an toàn), trùng MSSV, validate, khóa MSSV, đăng nhập không đổi `UpdatedAt`, ảnh đại diện thay/gỡ có dọn file |
 | `Api/AdminUsersTests` | Phân trang, tìm không dấu, lọc, đổi vai trò và khóa tài khoản đồng bộ sang Firebase, không tự sửa chính mình |
 | `Api/CategoriesTests` | Hiển thị theo vai trò, trùng tên không dấu, sắp xếp, xóa mềm, tạo lại tên đã xóa |
+| `Api/ReviewTests` | Quyền đánh giá (đơn hoàn thành, chủ đơn, món trong đơn), trùng, hạn 7 ngày (tua đồng hồ), điểm trung bình sau tạo/sửa/xóa/ẩn (ví dụ 5, 4, 3 cho 4,00; sửa thành 5, 4, 4 cho 4,33), 10 đánh giá song song, ẩn tên công khai, phân bố sao, trả lời kèm thông báo |
 | `Api/FoodsTests` | Tìm/lọc/sắp xếp. **Số suất còn lại tính theo giờ Việt Nam qua nửa đêm**, bỏ đơn hủy, sang ngày mới tính lại. Bán chạy 30 ngày. Chống ghi đè khi sửa đồng thời. Tùy chọn. Xóa mềm giữ lịch sử đơn. Yêu thích theo từng người |
 
 ## Chạy mobile

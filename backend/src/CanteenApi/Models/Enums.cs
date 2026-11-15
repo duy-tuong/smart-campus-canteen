@@ -50,4 +50,5 @@ public enum NotificationType
     OrderStatus,
     Promotion,
     System,
+    Review,   // Căn-tin trả lời đánh giá
 }

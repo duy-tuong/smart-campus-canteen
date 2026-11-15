@@ -36,6 +36,16 @@ public sealed class CanteenOptions
     public string? PublicBaseUrl { get; set; }
 }
 
+/// <summary>Quy tắc đánh giá món (section "Reviews").</summary>
+public sealed class ReviewOptions
+{
+    public const string SectionName = "Reviews";
+
+    /// <summary>Số ngày sau khi nhận món được viết/sửa đánh giá.</summary>
+    [Range(1, 60)]
+    public int EditWindowDays { get; set; } = 7;
+}
+
 /// <summary>Các tác vụ chạy nền (section "Workers"). Môi trường test tắt để tự gọi từng lượt.</summary>
 public sealed class WorkerOptions
 {

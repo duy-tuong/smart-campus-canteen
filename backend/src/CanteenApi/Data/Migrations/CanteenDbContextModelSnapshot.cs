@@ -775,6 +775,13 @@ namespace CanteenApi.Data.Migrations
                     b.Property<int>("FoodId")
                         .HasColumnType("int");
 
+                    b.Property<string>("HiddenReason")
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
+                    b.Property<bool>("IsHidden")
+                        .HasColumnType("bit");
+
                     b.Property<string>("OrderId")
                         .IsRequired()
                         .HasMaxLength(36)
@@ -782,6 +789,17 @@ namespace CanteenApi.Data.Migrations
 
                     b.Property<byte>("Rating")
                         .HasColumnType("tinyint");
+
+                    b.Property<DateTime?>("RepliedAt")
+                        .HasColumnType("datetime2(3)");
+
+                    b.Property<string>("RepliedByUserId")
+                        .HasMaxLength(128)
+                        .HasColumnType("nvarchar(128)");
+
+                    b.Property<string>("StaffReply")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
 
                     b.Property<DateTime>("UpdatedAt")
                         .ValueGeneratedOnAdd()
@@ -795,16 +813,22 @@ namespace CanteenApi.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("UserId");
+                    b.HasIndex("RepliedByUserId");
 
-                    b.HasIndex("FoodId", "CreatedAt");
+                    b.HasIndex("UserId");
 
                     b.HasIndex("OrderId", "FoodId")
                         .IsUnique();
 
+                    b.HasIndex("FoodId", "IsHidden", "CreatedAt");
+
                     b.ToTable("Reviews", null, t =>
                         {
+                            t.HasCheckConstraint("CK_Reviews_HiddenReason", "[IsHidden] = 0 OR [HiddenReason] IS NOT NULL");
+
                             t.HasCheckConstraint("CK_Reviews_Rating", "[Rating] BETWEEN 1 AND 5");
+
+                            t.HasCheckConstraint("CK_Reviews_Reply", "([StaffReply] IS NULL AND [RepliedAt] IS NULL AND [RepliedByUserId] IS NULL) OR ([StaffReply] IS NOT NULL AND [RepliedAt] IS NOT NULL AND [RepliedByUserId] IS NOT NULL)");
                         });
                 });
 
@@ -1056,6 +1080,11 @@ namespace CanteenApi.Data.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("CanteenApi.Models.AppUser", "RepliedByUser")
+                        .WithMany()
+                        .HasForeignKey("RepliedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("CanteenApi.Models.AppUser", "User")
                         .WithMany("Reviews")
                         .HasForeignKey("UserId")
@@ -1065,6 +1094,8 @@ namespace CanteenApi.Data.Migrations
                     b.Navigation("Food");
 
                     b.Navigation("Order");
+
+                    b.Navigation("RepliedByUser");
 
                     b.Navigation("User");
                 });

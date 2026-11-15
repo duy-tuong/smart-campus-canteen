@@ -42,6 +42,12 @@ public static class ErrorCodes
     public const string TooManyActiveOrders = "TOO_MANY_ACTIVE_ORDERS";
     public const string PaymentMethodUnavailable = "PAYMENT_METHOD_UNAVAILABLE";
 
+    // Đánh giá
+    public const string ReviewNotAllowed = "REVIEW_NOT_ALLOWED";
+    public const string ReviewWindowClosed = "REVIEW_WINDOW_CLOSED";
+    public const string ReviewExists = "REVIEW_EXISTS";
+    public const string ReviewHidden = "REVIEW_HIDDEN";
+
     // Vòng đời đơn
     public const string InvalidStatusTransition = "INVALID_STATUS_TRANSITION";
     public const string PaymentRequired = "PAYMENT_REQUIRED";
