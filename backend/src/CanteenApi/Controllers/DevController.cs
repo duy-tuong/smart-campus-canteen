@@ -28,6 +28,7 @@ public class DevController(
     FirebaseDbService rtdb,
     IFirebaseAuthService firebaseAuth,
     UserAccessCache accessCache,
+    IFileStorage files,
     IHttpClientFactory httpClientFactory,
     IOptions<FirebaseOptions> firebaseOptions,
     IWebHostEnvironment env,
@@ -212,6 +213,9 @@ public class DevController(
     /// <summary>Xóa dữ liệu nghiệp vụ theo đúng thứ tự khóa ngoại, rồi đặt lại bộ đếm IDENTITY.</summary>
     private async Task ResetBusinessDataAsync(CancellationToken ct)
     {
+        // Ghi nhận ảnh đã upload của các món để xóa file sau khi xóa dữ liệu (tránh file mồ côi).
+        var uploadedImages = await db.Foods.Where(f => f.ImageUrl != null).Select(f => f.ImageUrl).ToListAsync(ct);
+
         await using var tx = await db.Database.BeginTransactionAsync(ct);
 
         await db.Reviews.ExecuteDeleteAsync(ct);
@@ -233,6 +237,8 @@ public class DevController(
         }
 
         await tx.CommitAsync(ct);
+
+        foreach (var path in uploadedImages) files.Delete(path); // chỉ xóa file trong /uploads, giữ ảnh seed
 
         // Dọn bản sao realtime trên Firebase để khớp với SQL Server.
         await rtdb.DeleteAsync("orders", ct);

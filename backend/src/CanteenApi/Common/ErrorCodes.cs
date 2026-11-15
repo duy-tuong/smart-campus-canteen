@@ -27,6 +27,7 @@ public static class ErrorCodes
 
     // Thực đơn
     public const string CategoryNameTaken = "CATEGORY_NAME_TAKEN";
+    public const string InvalidCategory = "INVALID_CATEGORY";
     public const string CategoryNotEmpty = "CATEGORY_NOT_EMPTY";
     public const string FoodNameTaken = "FOOD_NAME_TAKEN";
     public const string InvalidOptions = "INVALID_OPTIONS";

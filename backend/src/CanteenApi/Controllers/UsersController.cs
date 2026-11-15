@@ -1,4 +1,6 @@
 using CanteenApi.Auth;
+using CanteenApi.Common;
+using CanteenApi.Dtos.Menu;
 using CanteenApi.Dtos.Users;
 using CanteenApi.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -52,6 +54,12 @@ public class UsersController(UserService users, ICurrentUser me) : ControllerBas
     [ProducesResponseType<UserProfileDto>(StatusCodes.Status200OK)]
     public async Task<UserProfileDto> UploadAvatar(IFormFile file, CancellationToken ct) =>
         await users.UpdateAvatarAsync(me.Uid, file, ct);
+
+    /// <summary>Món yêu thích của tôi (mới thêm trước).</summary>
+    [HttpGet("me/favorites")]
+    public async Task<PagedResult<FoodSummaryDto>> GetFavorites(
+        [FromQuery] PageQuery query, [FromServices] FoodService foods, CancellationToken ct) =>
+        await foods.ListFavoritesAsync(me.Uid, query, ct);
 
     /// <summary>Gỡ ảnh đại diện.</summary>
     [HttpDelete("me/avatar")]

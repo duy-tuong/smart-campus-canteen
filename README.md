@@ -220,6 +220,44 @@ Tài liệu đầy đủ (schema request/response, thử trực tiếp) có tạ
 
 **Validate:** họ tên 2–100 ký tự (tự bỏ khoảng trắng thừa), MSSV đúng 10 chữ số, số điện thoại `0xxxxxxxxx` hoặc `+84xxxxxxxxx`.
 
+### Thực đơn
+
+| Method | Endpoint | Quyền | Mô tả |
+|---|---|---|---|
+| GET | `/api/categories` | ActiveUser | Danh mục theo thứ tự hiển thị, kèm `foodCount`. Staff/admin dùng `?includeInactive=true` để thấy cả danh mục đang ẩn |
+| GET | `/api/categories/{id}` | ActiveUser | Chi tiết danh mục |
+| POST | `/api/categories` | Staff/Admin | Tạo danh mục. Trùng tên (không phân biệt dấu, hoa/thường) trả 409 `CATEGORY_NAME_TAKEN` |
+| PUT | `/api/categories/{id}` | Staff/Admin | Sửa danh mục, ẩn/hiện qua `isActive` |
+| PUT | `/api/categories/order` | Staff/Admin | Sắp xếp lại: `{ "items": [{ "id": 1, "sortOrder": 0 }] }` |
+| DELETE | `/api/categories/{id}` | Staff/Admin | Xóa mềm. Còn món bên trong trả 409 `CATEGORY_NOT_EMPTY` |
+| GET | `/api/foods` | ActiveUser | Danh sách món, có phân trang (xem tham số bên dưới) |
+| GET | `/api/foods/{id}` | ActiveUser | Chi tiết món kèm nhóm tùy chọn và `rowVersion` |
+| POST | `/api/foods` | Staff/Admin | Tạo món, có thể kèm `optionGroups` |
+| PUT | `/api/foods/{id}` | Staff/Admin | Sửa món, bắt buộc gửi `rowVersion`. Người khác đã sửa trước thì trả 409 `CONCURRENCY_CONFLICT` |
+| PUT | `/api/foods/{id}/option-groups` | Staff/Admin | Thay toàn bộ nhóm tùy chọn. Cấu hình sai trả 422 `INVALID_OPTIONS` |
+| PATCH | `/api/foods/{id}/availability` | Staff/Admin | `{ "isAvailable": false }` để báo hết món |
+| POST | `/api/foods/{id}/image` | Staff/Admin | Upload ảnh món (multipart, field `file`, tối đa 5 MB) |
+| DELETE | `/api/foods/{id}` | Staff/Admin | Xóa mềm: biến khỏi menu và danh sách yêu thích, hóa đơn và thống kê cũ giữ nguyên |
+| PUT / DELETE | `/api/foods/{id}/favorite` | ActiveUser | Thêm / bỏ yêu thích. Gọi lại nhiều lần vẫn an toàn |
+| GET | `/api/users/me/favorites` | ActiveUser | Món yêu thích của tôi, mới thêm trước |
+
+**Tham số `GET /api/foods`:** `q` (tìm không dấu theo tên và mô tả, ví dụ `com ga` ra "Cơm gà"), `categoryId`, `minPrice`, `maxPrice`, `availableOnly`, `sort` (`name` mặc định, `popular` theo số lượng bán 30 ngày, `price_asc`, `price_desc`, `rating`, `newest`), `page`, `pageSize` (tối đa 50).
+
+**Trường tính toán của món:**
+
+| Trường | Ý nghĩa |
+|---|---|
+| `remainingToday` | Số suất còn lại hôm nay = `dailyLimit` − số lượng đã đặt hôm nay. Tính theo giờ Việt Nam, bỏ qua đơn bị hủy. Bằng `null` nếu món không giới hạn suất |
+| `isSoldOut` | `true` khi món tạm hết hoặc đã hết suất hôm nay |
+| `hasOptions` | Món có nhóm tùy chọn |
+| `isFavorite` | Món nằm trong danh sách yêu thích của người đang xem |
+
+**Quy tắc tùy chọn:**
+- tên nhóm không trùng trong một món, tên tùy chọn không trùng trong một nhóm;
+- nhóm bắt buộc khi và chỉ khi `minSelect ≥ 1`;
+- `minSelect ≤ maxSelect ≤ số tùy chọn`;
+- giá cộng thêm từ 0 đến 200.000đ.
+
 ## Chạy mobile
 
 ```bash

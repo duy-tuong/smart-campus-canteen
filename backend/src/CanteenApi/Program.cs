@@ -64,6 +64,8 @@ builder.Services.AddHttpClient();
 
 // ---------- Nghiệp vụ ----------
 builder.Services.AddScoped<UserService>();
+builder.Services.AddScoped<CategoryService>();
+builder.Services.AddScoped<FoodService>();
 
 var app = builder.Build();
 
