@@ -1,3 +1,4 @@
+using CanteenApi.Models;
 using CanteenApi.Options;
 using CanteenApi.Services;
 using FirebaseAdmin;
@@ -7,10 +8,24 @@ using Microsoft.IdentityModel.Tokens;
 
 namespace CanteenApi.Auth;
 
-/// <summary>Các hằng số phân quyền dùng trong [Authorize(Roles = ...)].</summary>
+/// <summary>
+/// Giá trị custom claim "role" trong Firebase ID token, dùng trong [Authorize(Roles = ...)].
+/// </summary>
 public static class Roles
 {
+    public const string Student = "student";
     public const string Staff = "staff";
+    public const string Admin = "admin";
+
+    /// <summary>Staff hoặc Admin (dùng cho API quản lý căn-tin).</summary>
+    public const string StaffOrAdmin = Staff + "," + Admin;
+
+    public static string ToClaim(UserRole role) => role switch
+    {
+        UserRole.Staff => Staff,
+        UserRole.Admin => Admin,
+        _ => Student,
+    };
 }
 
 public static class FirebaseAuthExtensions

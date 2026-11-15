@@ -2,9 +2,15 @@
   "rules": {
     "orders": {
       ".indexOn": ["userId", "status"],
-      ".read": "auth != null && (auth.token.role === 'staff' || (query.orderByChild === 'userId' && query.equalTo === auth.uid))",
+      ".read": "auth != null && (auth.token.role === 'staff' || auth.token.role === 'admin' || (query.orderByChild === 'userId' && query.equalTo === auth.uid))",
       "$orderId": {
-        ".read": "auth != null && (data.child('userId').val() === auth.uid || auth.token.role === 'staff')",
+        ".read": "auth != null && (data.child('userId').val() === auth.uid || auth.token.role === 'staff' || auth.token.role === 'admin')",
+        ".write": false
+      }
+    },
+    "notifications": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
         ".write": false
       }
     }

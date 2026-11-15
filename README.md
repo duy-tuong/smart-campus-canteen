@@ -37,17 +37,37 @@ Sinh viên xem thực đơn, đặt món trước và theo dõi trạng thái ch
 
 Một đơn hàng dùng **cùng một `Id` (GUID)** ở cả ba nơi: SQL Server `Orders.Id`, Firebase `orders/{id}` và SQLite `orders.id`.
 
-### Lược đồ SQL Server
+### Lược đồ SQL Server (14 bảng)
 
 ```
-Categories 1 ──< Foods
-Users      1 ──< Orders 1 ──< OrderItems >── 1 Foods (FoodId NULL khi món bị xóa)
+Người dùng  Users
+Thực đơn    Categories 1──< Foods 1──< FoodOptionGroups 1──< FoodOptions
+            Users >──< Foods  (qua Favorites, khóa chính kép)
+Khuyến mãi  Vouchers 1──< Orders
+Đơn hàng    Users 1──< Orders 1──< OrderItems 1──< OrderItemOptions
+                      Orders 1──< OrderStatusHistory >── Users (người đổi trạng thái)
+                      Orders 1──< Payments
+Tương tác   Reviews (Users, Foods, Orders) · Notifications (Users)
 ```
 
-- Xóa danh mục còn món → bị chặn (`Restrict`).
-- Xóa đơn → xóa luôn chi tiết đơn (`Cascade`).
-- Xóa món → chi tiết đơn cũ giữ tên và giá, `FoodId = NULL` (`SetNull`).
-- Có các ràng buộc `CHECK` cho giá, số lượng và tổng tiền.
+| Nguyên tắc | Cách áp dụng |
+|---|---|
+| Hành vi khi xóa có chủ đích | Xóa đơn → xóa chi tiết, tùy chọn, lịch sử, thanh toán (`Cascade`). Không xóa được danh mục còn món, user/voucher đã có đơn (`Restrict`). Xóa món → hóa đơn cũ giữ nguyên, `FoodId = NULL` (`SetNull`) |
+| Xóa mềm | `Categories`, `Foods` có `IsDeleted`. Món đã bán không xóa vật lý để thống kê doanh thu vẫn đúng |
+| Lưu cứng dữ liệu lịch sử | `OrderItems`, `OrderItemOptions` lưu tên và giá tại thời điểm đặt, không phụ thuộc menu hiện tại |
+| CHECK | Giá > 0; `TotalAmount = Subtotal - DiscountAmount`; `LineTotal = (UnitPrice + OptionsPrice) × Quantity`; rating 1–5; % giảm ≤ 100; `EndAt > StartAt`; đơn hủy phải có lý do; `Paid` phải có `PaidAt`… |
+| UNIQUE | Email, mã sinh viên (filtered, cho phép NULL), mã voucher, tên món trong danh mục, mỗi món chỉ đánh giá 1 lần / đơn |
+| Chống ghi đè đồng thời | `RowVersion` trên `Foods`, `Vouchers`, `Orders` |
+| Thời gian | `datetime2(3)` UTC, `CreatedAt`/`UpdatedAt` tự gán khi `SaveChanges` |
+| Index | Theo truy vấn thật: đơn của tôi, bảng đơn theo trạng thái, doanh thu theo ngày, món bán chạy, thông báo chưa đọc |
+
+Cấu hình chi tiết từng bảng nằm trong `backend/src/CanteenApi/Data/Configurations/`.
+
+**Kiểm thử ràng buộc:** `backend/sql/constraint-tests.sql` cố tình chèn 19 trường hợp dữ liệu sai, và mọi trường hợp đều phải bị chặn. Mỗi test được rollback nên không làm thay đổi dữ liệu.
+
+```bash
+sqlcmd -S localhost -E -C -I -d SmartCanteenDb -f 65001 -i backend/sql/constraint-tests.sql
+```
 
 ## Cấu trúc thư mục
 
@@ -105,17 +125,31 @@ dotnet user-secrets set "Firebase:CredentialPath" "<đường-dẫn-ngoài-repo>
 
 > ⚠️ File service account key **không bao giờ được commit** vào repo.
 
-### Endpoint khởi tạo dữ liệu (chỉ chạy ở môi trường Development)
+### Khởi tạo dữ liệu demo (chỉ chạy ở môi trường Development)
+
+Các endpoint `/api/dev/*` trả về 404 ở môi trường khác và không xuất hiện trong tài liệu API.
 
 | Method | Endpoint | Mô tả |
 |---|---|---|
-| POST | `/api/admin/seed` | Nạp danh mục và món ăn từ `SeedData/menu.json` vào SQL Server. Thêm `?reset=true` để xóa menu cũ và nạp lại |
-| POST | `/api/admin/staff?email=...` | Cấp quyền nhân viên căn-tin (custom claim `role=staff`) cho tài khoản đã đăng ký |
+| POST | `/api/dev/seed` | Nạp menu (4 danh mục, 18 món, 13 nhóm tùy chọn, 34 tùy chọn) và 3 voucher từ `SeedData/menu.json`. Thêm `?reset=true` để **xóa toàn bộ dữ liệu nghiệp vụ** (SQL Server và Firebase) rồi nạp lại |
+| POST | `/api/dev/accounts` | Tạo tài khoản demo trong Firebase Auth, gán vai trò và tạo hồ sơ trong bảng `Users`. Chạy lại nhiều lần không bị trùng |
+| POST | `/api/dev/role?email=...&role=Staff` | Đổi vai trò một tài khoản (`Student`, `Staff`, `Admin`) |
 
 ```bash
-curl -X POST http://localhost:5265/api/admin/seed
-curl -X POST "http://localhost:5265/api/admin/staff?email=staff@canteen.vn"
+curl -X POST http://localhost:5265/api/dev/seed
+curl -X POST http://localhost:5265/api/dev/accounts
 ```
+
+**Tài khoản demo** (mật khẩu chung: `Canteen@123`):
+
+| Email | Vai trò |
+|---|---|
+| admin@smartcanteen.vn | Admin |
+| staff@smartcanteen.vn | Staff |
+| sv01@smartcanteen.vn | Student (MSSV 0023410001) |
+| sv02@smartcanteen.vn | Student (MSSV 0023410002) |
+
+**Voucher mẫu:** `TANSV10` (giảm 10%, tối đa 15k, đơn từ 30k), `GIAM5K` (giảm 5k, đơn từ 40k), `COMTRUA20` (giảm 20%, tối đa 20k, đơn từ 60k).
 
 ## Chạy mobile
 

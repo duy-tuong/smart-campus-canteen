@@ -1,38 +1,212 @@
 {
   "categories": [
     {
-      "name": "Cơm", "icon": "rice_bowl", "sortOrder": 1,
+      "name": "Cơm", "description": "Cơm phần nóng hổi, đủ chất cho bữa trưa", "icon": "rice_bowl", "sortOrder": 1,
       "foods": [
-        {"name": "Cơm gà xối mỡ", "description": "Gà chiên giòn, cơm chiên, dưa leo", "price": 35000, "imageUrl": "/images/com-ga-xoi-mo.jpg", "isAvailable": true, "prepTimeMinutes": 10},
-        {"name": "Cơm tấm sườn bì chả", "description": "Sườn nướng, bì, chả trứng, nước mắm", "price": 40000, "imageUrl": "/images/com-tam.jpg", "isAvailable": true, "prepTimeMinutes": 10},
-        {"name": "Cơm chiên dương châu", "description": "Cơm chiên trứng, lạp xưởng, rau củ", "price": 30000, "imageUrl": "/images/com-chien.jpg", "isAvailable": true, "prepTimeMinutes": 8},
-        {"name": "Cơm bò lúc lắc", "description": "Bò xào lúc lắc, khoai tây, salad", "price": 45000, "imageUrl": "/images/com-bo.jpg", "isAvailable": true, "prepTimeMinutes": 12}
+        {
+          "name": "Cơm gà xối mỡ", "description": "Đùi gà chiên giòn xối mỡ, cơm chiên, dưa leo và nước mắm chua ngọt",
+          "price": 35000, "imageUrl": "/images/com-ga-xoi-mo.jpg", "prepTimeMinutes": 10, "dailyLimit": 60,
+          "optionGroups": [
+            { "name": "Món thêm", "isRequired": false, "minSelect": 0, "maxSelect": 3, "sortOrder": 1,
+              "options": [
+                { "name": "Trứng ốp la", "extraPrice": 6000, "sortOrder": 1 },
+                { "name": "Thêm cơm", "extraPrice": 5000, "sortOrder": 2 },
+                { "name": "Canh rau", "extraPrice": 3000, "sortOrder": 3 }
+              ] }
+          ]
+        },
+        {
+          "name": "Cơm tấm sườn bì chả", "description": "Sườn cốt lết nướng than, bì, chả trứng, mỡ hành",
+          "price": 40000, "imageUrl": "/images/com-tam.jpg", "prepTimeMinutes": 10, "dailyLimit": 50,
+          "optionGroups": [
+            { "name": "Món thêm", "isRequired": false, "minSelect": 0, "maxSelect": 3, "sortOrder": 1,
+              "options": [
+                { "name": "Trứng ốp la", "extraPrice": 6000, "sortOrder": 1 },
+                { "name": "Thêm sườn", "extraPrice": 15000, "sortOrder": 2 },
+                { "name": "Thêm cơm", "extraPrice": 5000, "sortOrder": 3 }
+              ] }
+          ]
+        },
+        {
+          "name": "Cơm chiên dương châu", "description": "Cơm chiên trứng, lạp xưởng, tôm, đậu Hà Lan, cà rốt",
+          "price": 30000, "imageUrl": "/images/com-chien.jpg", "prepTimeMinutes": 8,
+          "optionGroups": [
+            { "name": "Độ cay", "isRequired": true, "minSelect": 1, "maxSelect": 1, "sortOrder": 1,
+              "options": [
+                { "name": "Không cay", "extraPrice": 0, "sortOrder": 1 },
+                { "name": "Cay vừa", "extraPrice": 0, "sortOrder": 2 },
+                { "name": "Cay nhiều", "extraPrice": 0, "sortOrder": 3 }
+              ] }
+          ]
+        },
+        {
+          "name": "Cơm bò lúc lắc", "description": "Bò Úc xào lúc lắc, khoai tây chiên, salad dầu giấm",
+          "price": 45000, "imageUrl": "/images/com-bo.jpg", "prepTimeMinutes": 12, "dailyLimit": 30
+        },
+        {
+          "name": "Cơm chay thập cẩm", "description": "Đậu hũ sốt cà, nấm xào, rau củ luộc, chả chay",
+          "price": 28000, "imageUrl": "/images/com-chay.jpg", "prepTimeMinutes": 8
+        }
       ]
     },
     {
-      "name": "Mì & Bún", "icon": "ramen_dining", "sortOrder": 2,
+      "name": "Mì & Bún", "description": "Món nước và món xào", "icon": "ramen_dining", "sortOrder": 2,
       "foods": [
-        {"name": "Phở bò tái", "description": "Bánh phở, bò tái, nước dùng hầm xương", "price": 40000, "imageUrl": "/images/pho-bo.jpg", "isAvailable": true, "prepTimeMinutes": 7},
-        {"name": "Bún bò Huế", "description": "Bún, bò, giò heo, chả cua", "price": 40000, "imageUrl": "/images/bun-bo.jpg", "isAvailable": true, "prepTimeMinutes": 7},
-        {"name": "Mì xào hải sản", "description": "Mì trứng xào tôm, mực, rau cải", "price": 38000, "imageUrl": "/images/mi-xao.jpg", "isAvailable": true, "prepTimeMinutes": 10}
+        {
+          "name": "Phở bò tái", "description": "Bánh phở mềm, bò tái, nước dùng hầm xương 12 tiếng",
+          "price": 40000, "imageUrl": "/images/pho-bo.jpg", "prepTimeMinutes": 7, "dailyLimit": 40,
+          "optionGroups": [
+            { "name": "Cỡ tô", "isRequired": true, "minSelect": 1, "maxSelect": 1, "sortOrder": 1,
+              "options": [
+                { "name": "Tô thường", "extraPrice": 0, "sortOrder": 1 },
+                { "name": "Tô đặc biệt", "extraPrice": 10000, "sortOrder": 2 }
+              ] }
+          ]
+        },
+        {
+          "name": "Bún bò Huế", "description": "Bún sợi to, bắp bò, giò heo, chả cua, sả ớt",
+          "price": 40000, "imageUrl": "/images/bun-bo.jpg", "prepTimeMinutes": 7, "dailyLimit": 40,
+          "optionGroups": [
+            { "name": "Cỡ tô", "isRequired": true, "minSelect": 1, "maxSelect": 1, "sortOrder": 1,
+              "options": [
+                { "name": "Tô thường", "extraPrice": 0, "sortOrder": 1 },
+                { "name": "Tô đặc biệt", "extraPrice": 10000, "sortOrder": 2 }
+              ] }
+          ]
+        },
+        {
+          "name": "Mì xào hải sản", "description": "Mì trứng xào tôm, mực, cải ngọt, sốt dầu hào",
+          "price": 38000, "imageUrl": "/images/mi-xao.jpg", "prepTimeMinutes": 10
+        },
+        {
+          "name": "Hủ tiếu Nam Vang", "description": "Hủ tiếu dai, tôm, thịt bằm, gan, trứng cút",
+          "price": 35000, "imageUrl": "/images/hu-tieu.jpg", "prepTimeMinutes": 7,
+          "optionGroups": [
+            { "name": "Kiểu", "isRequired": true, "minSelect": 1, "maxSelect": 1, "sortOrder": 1,
+              "options": [
+                { "name": "Nước", "extraPrice": 0, "sortOrder": 1 },
+                { "name": "Khô", "extraPrice": 0, "sortOrder": 2 }
+              ] }
+          ]
+        }
       ]
     },
     {
-      "name": "Nước uống", "icon": "local_drink", "sortOrder": 3,
+      "name": "Nước uống", "description": "Giải khát giữa giờ học", "icon": "local_drink", "sortOrder": 3,
       "foods": [
-        {"name": "Trà đào cam sả", "description": "Trà đào, cam tươi, sả", "price": 20000, "imageUrl": "/images/tra-dao.jpg", "isAvailable": true, "prepTimeMinutes": 3},
-        {"name": "Cà phê sữa đá", "description": "Cà phê phin, sữa đặc", "price": 18000, "imageUrl": "/images/ca-phe.jpg", "isAvailable": true, "prepTimeMinutes": 3},
-        {"name": "Trà sữa trân châu", "description": "Trà sữa, trân châu đường đen", "price": 25000, "imageUrl": "/images/tra-sua.jpg", "isAvailable": true, "prepTimeMinutes": 4},
-        {"name": "Nước suối", "description": "Chai 500ml", "price": 8000, "imageUrl": "/images/nuoc-suoi.jpg", "isAvailable": true, "prepTimeMinutes": 1}
+        {
+          "name": "Trà đào cam sả", "description": "Trà đen ủ lạnh, đào ngâm, cam tươi và sả",
+          "price": 20000, "imageUrl": "/images/tra-dao.jpg", "prepTimeMinutes": 3,
+          "optionGroups": [
+            { "name": "Size", "isRequired": true, "minSelect": 1, "maxSelect": 1, "sortOrder": 1,
+              "options": [
+                { "name": "M", "extraPrice": 0, "sortOrder": 1 },
+                { "name": "L", "extraPrice": 5000, "sortOrder": 2 }
+              ] },
+            { "name": "Lượng đá", "isRequired": true, "minSelect": 1, "maxSelect": 1, "sortOrder": 2,
+              "options": [
+                { "name": "Bình thường", "extraPrice": 0, "sortOrder": 1 },
+                { "name": "Ít đá", "extraPrice": 0, "sortOrder": 2 },
+                { "name": "Không đá", "extraPrice": 0, "sortOrder": 3 }
+              ] }
+          ]
+        },
+        {
+          "name": "Cà phê sữa đá", "description": "Cà phê phin truyền thống, sữa đặc",
+          "price": 18000, "imageUrl": "/images/ca-phe.jpg", "prepTimeMinutes": 3,
+          "optionGroups": [
+            { "name": "Size", "isRequired": true, "minSelect": 1, "maxSelect": 1, "sortOrder": 1,
+              "options": [
+                { "name": "M", "extraPrice": 0, "sortOrder": 1 },
+                { "name": "L", "extraPrice": 5000, "sortOrder": 2 }
+              ] }
+          ]
+        },
+        {
+          "name": "Trà sữa trân châu", "description": "Trà sữa Assam, trân châu đường đen nấu mỗi ngày",
+          "price": 25000, "imageUrl": "/images/tra-sua.jpg", "prepTimeMinutes": 4,
+          "optionGroups": [
+            { "name": "Size", "isRequired": true, "minSelect": 1, "maxSelect": 1, "sortOrder": 1,
+              "options": [
+                { "name": "M", "extraPrice": 0, "sortOrder": 1 },
+                { "name": "L", "extraPrice": 6000, "sortOrder": 2 }
+              ] },
+            { "name": "Mức đường", "isRequired": true, "minSelect": 1, "maxSelect": 1, "sortOrder": 2,
+              "options": [
+                { "name": "100%", "extraPrice": 0, "sortOrder": 1 },
+                { "name": "70%", "extraPrice": 0, "sortOrder": 2 },
+                { "name": "50%", "extraPrice": 0, "sortOrder": 3 },
+                { "name": "0%", "extraPrice": 0, "sortOrder": 4 }
+              ] },
+            { "name": "Topping", "isRequired": false, "minSelect": 0, "maxSelect": 3, "sortOrder": 3,
+              "options": [
+                { "name": "Thêm trân châu", "extraPrice": 5000, "sortOrder": 1 },
+                { "name": "Pudding trứng", "extraPrice": 7000, "sortOrder": 2 },
+                { "name": "Thạch dừa", "extraPrice": 5000, "sortOrder": 3 },
+                { "name": "Kem cheese", "extraPrice": 8000, "sortOrder": 4 }
+              ] }
+          ]
+        },
+        {
+          "name": "Nước ép cam", "description": "Cam sành vắt tươi, không đường",
+          "price": 22000, "imageUrl": "/images/nuoc-cam.jpg", "prepTimeMinutes": 3
+        },
+        {
+          "name": "Nước suối", "description": "Chai 500ml",
+          "price": 8000, "imageUrl": "/images/nuoc-suoi.jpg", "prepTimeMinutes": 1
+        }
       ]
     },
     {
-      "name": "Ăn vặt", "icon": "bakery_dining", "sortOrder": 4,
+      "name": "Ăn vặt", "description": "Lót dạ nhanh giữa các tiết học", "icon": "bakery_dining", "sortOrder": 4,
       "foods": [
-        {"name": "Bánh mì thịt", "description": "Bánh mì pate, thịt nguội, rau", "price": 20000, "imageUrl": "/images/banh-mi.jpg", "isAvailable": true, "prepTimeMinutes": 3},
-        {"name": "Khoai tây chiên", "description": "Khoai tây chiên giòn, tương cà", "price": 20000, "imageUrl": "/images/khoai-tay.jpg", "isAvailable": true, "prepTimeMinutes": 5},
-        {"name": "Xúc xích nướng", "description": "Xúc xích Đức nướng, tương ớt", "price": 15000, "imageUrl": "/images/xuc-xich.jpg", "isAvailable": true, "prepTimeMinutes": 4}
+        {
+          "name": "Bánh mì thịt", "description": "Bánh mì giòn, pate, thịt nguội, chả lụa, rau thơm",
+          "price": 20000, "imageUrl": "/images/banh-mi.jpg", "prepTimeMinutes": 3, "dailyLimit": 80,
+          "optionGroups": [
+            { "name": "Món thêm", "isRequired": false, "minSelect": 0, "maxSelect": 2, "sortOrder": 1,
+              "options": [
+                { "name": "Thêm trứng", "extraPrice": 5000, "sortOrder": 1 },
+                { "name": "Thêm chả", "extraPrice": 5000, "sortOrder": 2 }
+              ] }
+          ]
+        },
+        {
+          "name": "Khoai tây chiên", "description": "Khoai tây cắt sợi chiên giòn, tương cà, tương ớt",
+          "price": 20000, "imageUrl": "/images/khoai-tay.jpg", "prepTimeMinutes": 5
+        },
+        {
+          "name": "Xúc xích nướng", "description": "Xúc xích Đức nướng, sốt tương ớt",
+          "price": 15000, "imageUrl": "/images/xuc-xich.jpg", "prepTimeMinutes": 4
+        },
+        {
+          "name": "Bánh flan", "description": "Bánh flan trứng sữa, cà phê đá bào",
+          "price": 12000, "imageUrl": "/images/banh-flan.jpg", "prepTimeMinutes": 1, "dailyLimit": 50
+        }
       ]
     }
+  ],
+  "vouchers": [
+    {
+      "code": "TANSV10", "description": "Giảm 10% cho tân sinh viên, tối đa 15.000đ",
+      "discountType": "Percent", "discountValue": 10, "maxDiscount": 15000, "minOrderAmount": 30000,
+      "validDays": 90, "usageLimit": 500, "perUserLimit": 3
+    },
+    {
+      "code": "GIAM5K", "description": "Giảm 5.000đ cho đơn từ 40.000đ",
+      "discountType": "Fixed", "discountValue": 5000, "minOrderAmount": 40000,
+      "validDays": 30, "perUserLimit": 5
+    },
+    {
+      "code": "COMTRUA20", "description": "Giảm 20% đơn từ 60.000đ, tối đa 20.000đ",
+      "discountType": "Percent", "discountValue": 20, "maxDiscount": 20000, "minOrderAmount": 60000,
+      "validDays": 14, "usageLimit": 100, "perUserLimit": 1
+    }
+  ],
+  "accounts": [
+    { "email": "admin@smartcanteen.vn", "password": "Canteen@123", "fullName": "Quản trị hệ thống", "role": "Admin" },
+    { "email": "staff@smartcanteen.vn", "password": "Canteen@123", "fullName": "Nhân viên căn-tin", "phone": "0901234567", "role": "Staff" },
+    { "email": "sv01@smartcanteen.vn", "password": "Canteen@123", "fullName": "Nguyễn Văn An", "studentCode": "0023410001", "phone": "0912345678", "role": "Student" },
+    { "email": "sv02@smartcanteen.vn", "password": "Canteen@123", "fullName": "Trần Thị Bình", "studentCode": "0023410002", "role": "Student" }
   ]
 }
