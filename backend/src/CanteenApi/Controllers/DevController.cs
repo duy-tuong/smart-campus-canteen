@@ -1,26 +1,35 @@
+using System.ComponentModel.DataAnnotations;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using CanteenApi.Auth;
+using CanteenApi.Common;
 using CanteenApi.Data;
 using CanteenApi.Models;
+using CanteenApi.Options;
 using CanteenApi.Services;
-using FirebaseAdmin.Auth;
+using CanteenApi.Services.Firebase;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
 namespace CanteenApi.Controllers;
 
 /// <summary>
-/// Công cụ khởi tạo dữ liệu cho môi trường phát triển/demo.
+/// Công cụ cho môi trường phát triển/demo: nạp dữ liệu mẫu, tạo tài khoản demo, lấy token để thử API.
 /// CHỈ hoạt động khi ASPNETCORE_ENVIRONMENT=Development; môi trường khác trả 404.
-/// Không hiển thị trong tài liệu API.
+/// Các endpoint nạp dữ liệu không hiển thị trong tài liệu API.
 /// </summary>
 [ApiController]
 [Route("api/dev")]
-[ApiExplorerSettings(IgnoreApi = true)]
+[Tags("Dev (chỉ môi trường Development)")]
 public class DevController(
     CanteenDbContext db,
     FirebaseDbService rtdb,
+    IFirebaseAuthService firebaseAuth,
+    UserAccessCache accessCache,
+    IHttpClientFactory httpClientFactory,
+    IOptions<FirebaseOptions> firebaseOptions,
     IWebHostEnvironment env,
     ILogger<DevController> logger) : ControllerBase
 {
@@ -35,6 +44,8 @@ public class DevController(
     /// ở SQL Server và Firebase RTDB rồi nạp lại. Bảng Users được giữ nguyên.
     /// </summary>
     [HttpPost("seed")]
+    [AllowAnonymous]
+    [ApiExplorerSettings(IgnoreApi = true)]
     public async Task<IActionResult> Seed([FromQuery] bool reset, CancellationToken ct)
     {
         if (!env.IsDevelopment()) return NotFound();
@@ -80,39 +91,27 @@ public class DevController(
 
     /// <summary>
     /// POST /api/dev/accounts — tạo các tài khoản demo (admin, staff, sinh viên) trong Firebase Auth
-    /// (nếu chưa có), gán custom claim role và tạo/cập nhật hồ sơ trong bảng Users.
+    /// (nếu chưa có), mở khóa, gán custom claim role và tạo/cập nhật hồ sơ trong bảng Users.
+    /// Chạy lại nhiều lần không tạo trùng.
     /// </summary>
     [HttpPost("accounts")]
+    [AllowAnonymous]
+    [ApiExplorerSettings(IgnoreApi = true)]
     public async Task<IActionResult> SeedAccounts(CancellationToken ct)
     {
         if (!env.IsDevelopment()) return NotFound();
 
         var seed = await ReadSeedAsync(ct);
-        var auth = FirebaseAuth.DefaultInstance;
         var results = new List<object>();
 
         foreach (var acc in seed.Accounts)
         {
-            UserRecord user;
-            var created = false;
-            try
-            {
-                user = await auth.GetUserByEmailAsync(acc.Email, ct);
-            }
-            catch (FirebaseAuthException ex) when (ex.AuthErrorCode == AuthErrorCode.UserNotFound)
-            {
-                user = await auth.CreateUserAsync(new UserRecordArgs
-                {
-                    Email = acc.Email,
-                    Password = acc.Password,
-                    DisplayName = acc.FullName,
-                    EmailVerified = true,
-                }, ct);
-                created = true;
-            }
+            var user = await firebaseAuth.FindByEmailAsync(acc.Email, ct);
+            var created = user is null;
+            user ??= await firebaseAuth.CreateUserAsync(acc.Email, acc.Password, acc.FullName, ct);
 
-            await auth.SetCustomUserClaimsAsync(
-                user.Uid, new Dictionary<string, object> { ["role"] = Roles.ToClaim(acc.Role) }, ct);
+            if (user.Disabled) await firebaseAuth.SetDisabledAsync(user.Uid, false, ct);
+            await firebaseAuth.SetRoleClaimAsync(user.Uid, acc.Role, ct);
 
             var profile = await db.Users.FindAsync([user.Uid], ct);
             if (profile is null)
@@ -127,6 +126,7 @@ public class DevController(
             profile.Role = acc.Role;
             profile.IsActive = true;
 
+            accessCache.Invalidate(user.Uid);
             results.Add(new { acc.Email, role = acc.Role.ToString(), created });
         }
 
@@ -136,30 +136,77 @@ public class DevController(
 
     /// <summary>
     /// POST /api/dev/role?email=...&amp;role=Staff — đổi vai trò một tài khoản đã đăng ký.
-    /// Người dùng cần đăng nhập lại (hoặc getIdToken(true)) để token mới có quyền.
+    /// Có hiệu lực ngay với API (vai trò đọc từ DB); Security Rules của Firebase nhận claim mới
+    /// khi app làm mới token (getIdToken(true)).
     /// </summary>
     [HttpPost("role")]
+    [AllowAnonymous]
+    [ApiExplorerSettings(IgnoreApi = true)]
     public async Task<IActionResult> SetRole([FromQuery] string email, [FromQuery] UserRole role, CancellationToken ct)
     {
         if (!env.IsDevelopment()) return NotFound();
 
-        try
-        {
-            var user = await FirebaseAuth.DefaultInstance.GetUserByEmailAsync(email, ct);
-            await FirebaseAuth.DefaultInstance.SetCustomUserClaimsAsync(
-                user.Uid, new Dictionary<string, object> { ["role"] = Roles.ToClaim(role) }, ct);
+        var user = await firebaseAuth.FindByEmailAsync(email, ct);
+        if (user is null) return NotFound(new { message = $"Không tìm thấy tài khoản {email}." });
 
-            var updated = await db.Users.Where(u => u.Id == user.Uid)
-                .ExecuteUpdateAsync(s => s
-                    .SetProperty(u => u.Role, role)
-                    .SetProperty(u => u.UpdatedAt, DateTime.UtcNow), ct);
+        await firebaseAuth.SetRoleClaimAsync(user.Uid, role, ct);
+        var updated = await db.Users.Where(u => u.Id == user.Uid)
+            .ExecuteUpdateAsync(s => s
+                .SetProperty(u => u.Role, role)
+                .SetProperty(u => u.UpdatedAt, DateTime.UtcNow), ct);
+        accessCache.Invalidate(user.Uid);
 
-            return Ok(new { user.Uid, email, role = role.ToString(), profileUpdated = updated > 0 });
-        }
-        catch (FirebaseAuthException ex) when (ex.AuthErrorCode == AuthErrorCode.UserNotFound)
-        {
-            return NotFound(new { message = $"Không tìm thấy tài khoản {email}." });
-        }
+        return Ok(new { user.Uid, email, role = role.ToString(), profileUpdated = updated > 0 });
+    }
+
+    /// <summary>
+    /// Đăng nhập bằng email/mật khẩu (qua Firebase Auth REST) và trả về ID token để thử API trên Scalar.
+    /// Ví dụ: sv01@smartcanteen.vn / Canteen@123. Token có hạn 1 giờ.
+    /// </summary>
+    [HttpPost("token")]
+    [AllowAnonymous]
+    [ProducesResponseType<DevTokenResponse>(StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetToken([FromBody] DevTokenRequest request, CancellationToken ct)
+    {
+        if (!env.IsDevelopment()) return NotFound();
+
+        var apiKey = firebaseOptions.Value.WebApiKey;
+        if (string.IsNullOrWhiteSpace(apiKey))
+            throw new BadRequestException(ErrorCodes.ValidationError,
+                "Chưa cấu hình Firebase:WebApiKey trong user-secrets (xem README).");
+
+        var http = httpClientFactory.CreateClient();
+        using var response = await http.PostAsJsonAsync(
+            $"https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key={apiKey}",
+            new { email = request.Email, password = request.Password, returnSecureToken = true }, ct);
+
+        if (!response.IsSuccessStatusCode)
+            throw new AppException(StatusCodes.Status401Unauthorized, ErrorCodes.Unauthorized,
+                "Sai email/mật khẩu hoặc tài khoản đã bị khóa.");
+
+        var body = await response.Content.ReadFromJsonAsync<FirebaseSignInResponse>(ct)
+                   ?? throw new InvalidOperationException("Firebase không trả về token.");
+        return Ok(new DevTokenResponse(body.IdToken, body.LocalId, int.Parse(body.ExpiresIn)));
+    }
+
+    /// <summary>
+    /// Kiểm tra phân quyền: trả về người dùng hiện tại (vai trò lấy từ SQL Server).
+    /// Yêu cầu tài khoản đã có hồ sơ và không bị khóa.
+    /// </summary>
+    [HttpGet("whoami")]
+    public IActionResult WhoAmI([FromServices] ICurrentUser me)
+    {
+        if (!env.IsDevelopment()) return NotFound();
+        return Ok(new { me.Uid, me.Email, me.Role });
+    }
+
+    /// <summary>Kiểm tra policy StaffOrAdmin (sinh viên gọi sẽ nhận 403 FORBIDDEN).</summary>
+    [HttpGet("staff-only")]
+    [Authorize(Policy = Policies.StaffOrAdmin)]
+    public IActionResult StaffOnly([FromServices] ICurrentUser me)
+    {
+        if (!env.IsDevelopment()) return NotFound();
+        return Ok(new { message = "Bạn có quyền staff/admin.", me.Role });
     }
 
     /// <summary>Xóa dữ liệu nghiệp vụ theo đúng thứ tự khóa ngoại, rồi đặt lại bộ đếm IDENTITY.</summary>
@@ -199,6 +246,18 @@ public class DevController(
         return await JsonSerializer.DeserializeAsync<SeedData>(stream, SeedJson, ct)
                ?? throw new InvalidOperationException("menu.json rỗng hoặc sai định dạng.");
     }
+
+    // Lưu ý: với record, attribute validate phải đặt trên THAM SỐ constructor (không dùng [property: ...]).
+    public sealed record DevTokenRequest(
+        [Required(ErrorMessage = "Vui lòng nhập email.")]
+        [EmailAddress(ErrorMessage = "Email không đúng định dạng.")]
+        string Email,
+        [Required(ErrorMessage = "Vui lòng nhập mật khẩu.")]
+        string Password);
+
+    public sealed record DevTokenResponse(string IdToken, string Uid, int ExpiresInSeconds);
+
+    private sealed record FirebaseSignInResponse(string IdToken, string LocalId, string ExpiresIn);
 
     private sealed record SeedData(List<Category> Categories, List<SeedVoucher> Vouchers, List<SeedAccount> Accounts);
 

@@ -3,7 +3,7 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using CanteenApi.Options;
-using Google.Apis.Auth.OAuth2;
+using CanteenApi.Services.Firebase;
 using Microsoft.Extensions.Options;
 
 namespace CanteenApi.Services;
@@ -17,13 +17,6 @@ namespace CanteenApi.Services;
 /// </summary>
 public sealed class FirebaseDbService
 {
-    /// <summary>OAuth2 scopes cần cho Realtime Database REST API.</summary>
-    public static readonly string[] Scopes =
-    [
-        "https://www.googleapis.com/auth/firebase.database",
-        "https://www.googleapis.com/auth/userinfo.email",
-    ];
-
     /// <summary>JSON camelCase để khớp với dữ liệu Flutter đọc từ RTDB.</summary>
     public static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
     {
@@ -31,13 +24,13 @@ public sealed class FirebaseDbService
     };
 
     private readonly HttpClient _http;
-    private readonly ITokenAccess _credential;
+    private readonly FirebaseCredentialProvider _credentials;
     private readonly string _baseUrl;
 
-    public FirebaseDbService(HttpClient http, RtdbCredential credential, IOptions<FirebaseOptions> options)
+    public FirebaseDbService(HttpClient http, FirebaseCredentialProvider credentials, IOptions<FirebaseOptions> options)
     {
         _http = http;
-        _credential = credential.Token;
+        _credentials = credentials;
         _baseUrl = options.Value.DatabaseUrl.TrimEnd('/');
     }
 
@@ -104,7 +97,10 @@ public sealed class FirebaseDbService
         var url = $"{_baseUrl}/{path.Trim('/')}.json";
         if (!string.IsNullOrEmpty(query)) url += "?" + query;
 
-        var token = await _credential.GetAccessTokenForRequestAsync(cancellationToken: ct);
+        if (string.IsNullOrEmpty(_baseUrl))
+            throw new InvalidOperationException("Chưa cấu hình Firebase:DatabaseUrl (xem README).");
+
+        var token = await _credentials.RtdbToken.GetAccessTokenForRequestAsync(cancellationToken: ct);
         var request = new HttpRequestMessage(method, url);
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
         return request;
@@ -120,9 +116,3 @@ public sealed class FirebaseDbService
 
     private sealed record PushResult(string Name);
 }
-
-/// <summary>
-/// Credential đã gắn scope Realtime Database, đăng ký singleton để access token
-/// được cache và tự làm mới (thay vì xin token mới cho mỗi request).
-/// </summary>
-public sealed record RtdbCredential(ITokenAccess Token);

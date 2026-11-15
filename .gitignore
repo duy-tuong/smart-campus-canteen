@@ -26,3 +26,6 @@ mobile/.dart_tool/
 # ===== Firebase CLI =====
 firebase/.firebase/
 firebase/*.log
+
+# Ảnh người dùng upload lúc chạy
+backend/src/CanteenApi/wwwroot/uploads/

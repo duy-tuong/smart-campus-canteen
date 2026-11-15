@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CanteenApi.Controllers;
@@ -7,6 +8,7 @@ namespace CanteenApi.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/[controller]")]
+[AllowAnonymous]
 public class HealthController : ControllerBase
 {
     /// <summary>GET /api/health</summary>

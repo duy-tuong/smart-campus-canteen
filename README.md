@@ -121,9 +121,58 @@ cd backend/src/CanteenApi
 dotnet user-secrets set "Firebase:ProjectId" "<project-id>"
 dotnet user-secrets set "Firebase:DatabaseUrl" "https://<project-id>-default-rtdb.asia-southeast1.firebasedatabase.app"
 dotnet user-secrets set "Firebase:CredentialPath" "<đường-dẫn-ngoài-repo>/service-account.json"
+# Web API key (khóa công khai, lấy giá trị apiKey trong mobile/lib/firebase_options.dart) — dùng cho /api/dev/token
+dotnet user-secrets set "Firebase:WebApiKey" "<apiKey>"
 ```
 
 > ⚠️ File service account key **không bao giờ được commit** vào repo.
+
+### Xác thực & phân quyền
+
+- **Gửi token:** app gửi Firebase ID token trong header `Authorization: Bearer <idToken>`.
+- **Mặc định mọi endpoint đều yêu cầu đăng nhập**, có hồ sơ trong bảng `Users` và tài khoản không bị khóa. Endpoint công khai phải ghi rõ `[AllowAnonymous]`.
+- **Vai trò lấy từ SQL Server**, cache 60 giây. Admin đổi vai trò hoặc khóa tài khoản là có hiệu lực ngay ở request kế tiếp, không cần đợi app làm mới token.
+
+| Policy | Điều kiện |
+|---|---|
+| `SignedIn` | Chỉ cần token hợp lệ (dùng cho bước tạo hồ sơ sau khi đăng ký) |
+| `ActiveUser` (mặc định) | Token hợp lệ, đã có hồ sơ, không bị khóa |
+| `StaffOrAdmin` | `ActiveUser` với vai trò staff hoặc admin |
+| `AdminOnly` | `ActiveUser` với vai trò admin |
+
+**Thử API có token trên Scalar** (chỉ ở Development):
+1. Mở `/scalar` và gọi `POST /api/dev/token` với `{ "email": "sv01@smartcanteen.vn", "password": "Canteen@123" }`.
+2. Copy `idToken` dán vào ô **Bearer** của Scalar. Token có hạn 1 giờ.
+3. Gọi `GET /api/dev/whoami` để xem uid và vai trò hiện tại.
+
+### Định dạng lỗi
+
+Mọi lỗi đều trả về chuẩn RFC 7807 (`application/problem+json`) với trường `code` cố định. App dựa vào `code` để xử lý, không dựa vào câu chữ.
+
+```json
+{
+  "type": "https://httpstatuses.io/403",
+  "title": "Không có quyền truy cập",
+  "status": 403,
+  "detail": "Tài khoản đã bị khóa. Vui lòng liên hệ quản trị viên.",
+  "code": "ACCOUNT_LOCKED",
+  "traceId": "00-...-00"
+}
+```
+
+| HTTP | `code` | Khi nào |
+|---|---|---|
+| 400 | `VALIDATION_ERROR` | Dữ liệu gửi lên sai. Có thêm `errors: { "field": ["..."] }` |
+| 400 | `INVALID_FILE` | Ảnh sai định dạng hoặc quá dung lượng |
+| 401 | `UNAUTHORIZED` | Thiếu token, token sai hoặc hết hạn |
+| 403 | `PROFILE_NOT_FOUND` | Đã đăng ký Firebase nhưng chưa tạo hồ sơ |
+| 403 | `ACCOUNT_LOCKED` | Tài khoản bị khóa |
+| 403 | `FORBIDDEN` | Không đủ quyền (ví dụ sinh viên gọi API của staff) |
+| 404 | `NOT_FOUND` | Không tìm thấy |
+| 409 | `CONCURRENCY_CONFLICT` | Dữ liệu đã bị người khác sửa (`RowVersion`) |
+| 409 | `DUPLICATE`, `*_TAKEN` | Trùng dữ liệu duy nhất |
+| 422 | (theo nghiệp vụ) | Vi phạm quy tắc nghiệp vụ |
+| 500 | `INTERNAL_ERROR` | Lỗi hệ thống. Chi tiết chỉ ghi vào log theo `traceId`, không trả về client |
 
 ### Khởi tạo dữ liệu demo (chỉ chạy ở môi trường Development)
 
