@@ -17,10 +17,16 @@ public class OrderConfiguration : IEntityTypeConfiguration<Order>
             t.HasCheckConstraint("CK_Orders_CancelReason", "[Status] <> 'Cancelled' OR [CancelReason] IS NOT NULL");
             // Có VoucherId thì phải lưu lại mã voucher.
             t.HasCheckConstraint("CK_Orders_VoucherCode", "[VoucherId] IS NULL OR [VoucherCode] IS NOT NULL");
+            t.HasCheckConstraint("CK_Orders_PaymentStatus",
+                "[PaymentStatus] IN ('Pending', 'Paid', 'Refunded', 'Failed')");
+            // Đã thanh toán (hoặc đã hoàn tiền) thì phải có thời điểm thanh toán.
+            t.HasCheckConstraint("CK_Orders_PaidAt", "[PaymentStatus] NOT IN ('Paid', 'Refunded') OR [PaidAt] IS NOT NULL");
         });
 
         e.Property(x => x.Id).HasMaxLength(36);
         e.Property(x => x.PickupCode).HasMaxLength(10).IsUnicode(false).IsRequired();
+        e.Property(x => x.ClientRequestId).HasMaxLength(64).IsUnicode(false);
+        e.Property(x => x.PaymentStatus).HasConversion<string>().HasMaxLength(20).IsUnicode(false);
         e.Property(x => x.UserId).HasMaxLength(128);
         e.Property(x => x.VoucherCode).HasMaxLength(30).IsUnicode(false);
         e.Property(x => x.Status).HasConversion<string>().HasMaxLength(20).IsUnicode(false);
@@ -46,6 +52,12 @@ public class OrderConfiguration : IEntityTypeConfiguration<Order>
         e.HasIndex(x => new { x.Status, x.CreatedAt });   // Bảng đơn của staff
         e.HasIndex(x => x.CreatedAt);                     // Thống kê doanh thu theo ngày
         e.HasIndex(x => x.VoucherId);
+
+        // Mã nhận món không trùng trong cùng một ngày (giờ Việt Nam).
+        e.HasIndex(x => new { x.PickupDate, x.PickupCode }).IsUnique();
+
+        // Idempotency: một người dùng không thể tạo hai đơn với cùng một Idempotency-Key.
+        e.HasIndex(x => new { x.UserId, x.ClientRequestId }).IsUnique().HasFilter("[ClientRequestId] IS NOT NULL");
     }
 }
 
@@ -135,13 +147,22 @@ public class PaymentConfiguration : IEntityTypeConfiguration<Payment>
             t.HasCheckConstraint("CK_Payments_Amount", "[Amount] >= 0");
             // Đã thanh toán thì phải có thời điểm thanh toán.
             t.HasCheckConstraint("CK_Payments_PaidAt", "[Status] <> 'Paid' OR [PaidAt] IS NOT NULL");
+            t.HasCheckConstraint("CK_Payments_ProviderOrderCode", "[ProviderOrderCode] IS NULL OR [ProviderOrderCode] > 0");
+            // Thông tin payOS chỉ có với thanh toán chuyển khoản.
+            t.HasCheckConstraint("CK_Payments_ProviderMethod", "[ProviderOrderCode] IS NULL OR [Method] = 'BankTransfer'");
         });
 
         e.Property(x => x.OrderId).HasMaxLength(36);
         e.Property(x => x.Method).HasConversion<string>().HasMaxLength(20).IsUnicode(false);
         e.Property(x => x.Status).HasConversion<string>().HasMaxLength(20).IsUnicode(false);
         e.Property(x => x.TransactionRef).HasMaxLength(100).IsUnicode(false);
+        e.Property(x => x.PaymentLinkId).HasMaxLength(64).IsUnicode(false);
+        e.Property(x => x.CheckoutUrl).HasMaxLength(500).IsUnicode(false);
+        e.Property(x => x.QrCode).HasMaxLength(1000).IsUnicode(false);
         e.Property(x => x.CreatedAt).HasDefaultValueSql("SYSUTCDATETIME()");
+
+        // Mỗi orderCode của payOS ứng với đúng một giao dịch.
+        e.HasIndex(x => x.ProviderOrderCode).IsUnique().HasFilter("[ProviderOrderCode] IS NOT NULL");
 
         e.HasOne(x => x.Order)
          .WithMany(o => o.Payments)

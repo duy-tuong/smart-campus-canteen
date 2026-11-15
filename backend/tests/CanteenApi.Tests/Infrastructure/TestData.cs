@@ -82,6 +82,48 @@ public static class TestData
                 Foods = { new Food { Name = HiddenFood, Description = "Chưa mở bán", Price = 50000, PrepTimeMinutes = 5 } },
             });
 
+        var now = CanteenApiFactory.Now.UtcDateTime;
+        db.Vouchers.AddRange(
+            new Voucher
+            {
+                Code = Percent10, Description = "Giảm 10% tối đa 15k, đơn từ 30k", DiscountType = DiscountType.Percent,
+                DiscountValue = 10, MaxDiscount = 15000, MinOrderAmount = 30000, PerUserLimit = 2, UsageLimit = 100,
+                StartAt = now.AddDays(-1), EndAt = now.AddDays(30),
+            },
+            new Voucher
+            {
+                Code = Fixed5K, Description = "Giảm 5k cho đơn từ 40k", DiscountType = DiscountType.Fixed,
+                DiscountValue = 5000, MinOrderAmount = 40000, StartAt = now.AddDays(-1), EndAt = now.AddDays(7),
+            },
+            new Voucher
+            {
+                Code = Exhausted, Description = "Đã hết lượt", DiscountType = DiscountType.Fixed, DiscountValue = 2000,
+                UsageLimit = 1, UsedCount = 1, StartAt = now.AddDays(-1), EndAt = now.AddDays(7),
+            },
+            new Voucher
+            {
+                Code = Expired, Description = "Đã hết hạn", DiscountType = DiscountType.Fixed, DiscountValue = 2000,
+                StartAt = now.AddDays(-10), EndAt = now.AddDays(-1),
+            },
+            new Voucher
+            {
+                Code = NotStarted, Description = "Chưa bắt đầu", DiscountType = DiscountType.Fixed, DiscountValue = 2000,
+                StartAt = now.AddDays(1), EndAt = now.AddDays(10),
+            },
+            new Voucher
+            {
+                Code = Inactive, Description = "Đã tắt", DiscountType = DiscountType.Fixed, DiscountValue = 2000,
+                IsActive = false, StartAt = now.AddDays(-1), EndAt = now.AddDays(7),
+            });
+
         await db.SaveChangesAsync();
     }
+
+    // ----- Voucher -----
+    public const string Percent10 = "TANSV10";
+    public const string Fixed5K = "GIAM5K";
+    public const string Exhausted = "HETLUOT";
+    public const string Expired = "HETHAN";
+    public const string NotStarted = "CHUABATDAU";
+    public const string Inactive = "DATAT";
 }

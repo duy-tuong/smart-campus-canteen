@@ -366,24 +366,8 @@ public class FoodsTests(CanteenApiFactory factory) : ApiTestBase(factory)
     private Task<int> CategoryIdAsync(string name) =>
         Factory.WithDbAsync(db => db.Categories.Where(c => c.Name == name).Select(c => c.Id).SingleAsync());
 
-    /// <summary>Chèn đơn trực tiếp vào DB với thời điểm tạo cụ thể (UTC).</summary>
     private Task AddOrderAsync(string foodName, int quantity, DateTime createdAtUtc, OrderStatus status = OrderStatus.Received) =>
-        Factory.WithDbAsync(async db =>
-        {
-            var food = await db.Foods.SingleAsync(f => f.Name == foodName);
-            var id = Guid.NewGuid().ToString();
-            var total = food.Price * quantity;
-            db.Orders.Add(new Order
-            {
-                Id = id, PickupCode = "T01", UserId = TestData.Student1, Status = status,
-                Subtotal = total, TotalAmount = total,
-                CancelReason = status == OrderStatus.Cancelled ? "Khách hủy" : null,
-                Items = { new OrderItem { FoodId = food.Id, FoodName = food.Name, UnitPrice = food.Price, Quantity = quantity, LineTotal = total } },
-            });
-            await db.SaveChangesAsync();
-            // SaveChanges tự gán CreatedAt = giờ thật → ghi đè bằng thời điểm của kịch bản test.
-            await db.Orders.Where(o => o.Id == id).ExecuteUpdateAsync(s => s.SetProperty(o => o.CreatedAt, createdAtUtc));
-        });
+        TestOrders.AddAsync(Factory, foodName, quantity, createdAtUtc, status);
 
     private static CreateFoodRequest NewFood(string name, int categoryId) => new(
         categoryId, name, "Mô tả món", 20000, 3, 20, null,

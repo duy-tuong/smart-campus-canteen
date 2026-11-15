@@ -258,6 +258,40 @@ Tài liệu đầy đủ (schema request/response, thử trực tiếp) có tạ
 - `minSelect ≤ maxSelect ≤ số tùy chọn`;
 - giá cộng thêm từ 0 đến 200.000đ.
 
+### Báo giá & voucher
+
+| Method | Endpoint | Quyền | Mô tả |
+|---|---|---|---|
+| POST | `/api/orders/quote` | ActiveUser | Báo giá giỏ hàng cho màn Thanh toán, **không tạo đơn**. Giá lấy từ database, client chỉ gửi `foodId`, `quantity`, `optionIds`, `note`. Trả các dòng đã tính giá, `errors` theo từng dòng, kết quả voucher, `canOrder` |
+| GET | `/api/vouchers/available` | ActiveUser | Voucher tôi đang dùng được, kèm `remainingForMe` |
+| GET | `/api/admin/vouchers` | Staff/Admin | Danh sách voucher (`q`, `isActive`, phân trang) kèm `usedCount`, `orderCount` |
+| POST | `/api/admin/vouchers` | Staff/Admin | Tạo voucher (mã tự viết hoa). Trùng mã trả 409 `VOUCHER_CODE_TAKEN` |
+| PUT | `/api/admin/vouchers/{id}` | Staff/Admin | Sửa voucher, bắt buộc `rowVersion`. Mã đã dùng thì không đổi được mã/kiểu giảm (422 `VOUCHER_IN_USE`) |
+| PATCH | `/api/admin/vouchers/{id}/status` | Staff/Admin | `{ "isActive": false }` |
+| DELETE | `/api/admin/vouchers/{id}` | Staff/Admin | Chỉ xóa được voucher chưa dùng, đã dùng trả 409 `VOUCHER_IN_USE` |
+
+**Lỗi theo dòng giỏ hàng** (trong `errors[]` của báo giá): `ITEM_UNAVAILABLE` (món đã ẩn/xóa/tạm hết), `OPTION_INVALID` (thiếu nhóm bắt buộc, vượt số lựa chọn, tùy chọn tạm hết hoặc không thuộc món, chọn trùng), `ITEM_SOLD_OUT` (vượt số suất còn lại hôm nay, cộng dồn các dòng cùng món, kèm `remaining`).
+
+**Voucher:**
+- Mã lỗi: `VOUCHER_INVALID`, `VOUCHER_EXPIRED` (hết hạn hoặc chưa bắt đầu), `VOUCHER_MIN_ORDER` (kèm số tiền còn thiếu), `VOUCHER_EXHAUSTED`, `VOUCHER_USER_LIMIT` (đơn đã hủy không tính lượt).
+- Voucher không hợp lệ không chặn đặt hàng, chỉ không được giảm.
+- Giảm theo % được làm tròn xuống 100đ và không vượt `maxDiscount`.
+- Lượt dùng được giữ bằng **một câu UPDATE có điều kiện** (`UsedCount < UsageLimit`), nên nhiều người dùng cùng lúc không vượt giới hạn (có test 10 request song song, chỉ đúng 3 lượt thành công).
+
+**Thời gian:** mọi thời điểm trong API là UTC dạng ISO 8601 có hậu tố `Z`, ví dụ `2026-11-16T03:00:00Z`. App tự đổi sang giờ Việt Nam khi hiển thị.
+
+### Cấu hình vận hành căn-tin (`appsettings.json`)
+
+| Khóa | Mặc định | Ý nghĩa |
+|---|---|---|
+| `Canteen:OpenTime` / `CloseTime` | `06:30` / `19:00` | Giờ nhận đơn (giờ Việt Nam) |
+| `Canteen:MaxActiveOrdersPerUser` | 3 | Số đơn đang xử lý tối đa mỗi người |
+| `Canteen:MaxLinesPerOrder` | 20 | Số dòng món tối đa mỗi đơn |
+| `Canteen:UnpaidTransferTimeoutMinutes` | 15 | Đơn chuyển khoản chưa trả quá hạn này sẽ tự hủy |
+| `Canteen:MinPickupLeadMinutes` | 10 | Giờ hẹn lấy món tối thiểu sau lúc đặt |
+| `Canteen:PublicBaseUrl` | (trống) | URL public (tunnel) cho returnUrl/webhook payOS |
+| `PayOS:Enabled` | `false` | Bật thanh toán chuyển khoản qua payOS. Khóa đặt trong user-secrets |
+
 ## Kiểm thử tự động
 
 ```bash
@@ -265,7 +299,7 @@ cd backend
 dotnet test
 ```
 
-Bộ test nằm trong `backend/tests/CanteenApi.Tests` (xUnit), gồm **76 test, chạy khoảng 6 giây**. Test chạy **toàn bộ backend thật trong bộ nhớ** (`WebApplicationFactory`): routing, phân quyền, validate, EF Core và SQL Server thật. Chỉ một số phần được thay thế:
+Bộ test nằm trong `backend/tests/CanteenApi.Tests` (xUnit), gồm **110 test, chạy khoảng 7 giây**. Test chạy **toàn bộ backend thật trong bộ nhớ** (`WebApplicationFactory`): routing, phân quyền, validate, EF Core và SQL Server thật. Chỉ một số phần được thay thế:
 
 | Thành phần | Trong test |
 |---|---|

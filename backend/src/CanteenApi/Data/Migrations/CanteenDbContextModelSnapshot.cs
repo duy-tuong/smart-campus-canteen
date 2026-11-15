@@ -394,6 +394,11 @@ namespace CanteenApi.Data.Migrations
                         .HasMaxLength(300)
                         .HasColumnType("nvarchar(300)");
 
+                    b.Property<string>("ClientRequestId")
+                        .HasMaxLength(64)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(64)");
+
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("datetime2(3)")
@@ -409,7 +414,16 @@ namespace CanteenApi.Data.Migrations
                         .HasMaxLength(300)
                         .HasColumnType("nvarchar(300)");
 
+                    b.Property<DateTime?>("PaidAt")
+                        .HasColumnType("datetime2(3)");
+
                     b.Property<string>("PaymentMethod")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(20)");
+
+                    b.Property<string>("PaymentStatus")
                         .IsRequired()
                         .HasMaxLength(20)
                         .IsUnicode(false)
@@ -420,6 +434,9 @@ namespace CanteenApi.Data.Migrations
                         .HasMaxLength(10)
                         .IsUnicode(false)
                         .HasColumnType("varchar(10)");
+
+                    b.Property<DateOnly>("PickupDate")
+                        .HasColumnType("date");
 
                     b.Property<DateTime?>("PickupTime")
                         .HasColumnType("datetime2(3)");
@@ -466,7 +483,14 @@ namespace CanteenApi.Data.Migrations
 
                     b.HasIndex("VoucherId");
 
+                    b.HasIndex("PickupDate", "PickupCode")
+                        .IsUnique();
+
                     b.HasIndex("Status", "CreatedAt");
+
+                    b.HasIndex("UserId", "ClientRequestId")
+                        .IsUnique()
+                        .HasFilter("[ClientRequestId] IS NOT NULL");
 
                     b.HasIndex("UserId", "CreatedAt");
 
@@ -475,6 +499,10 @@ namespace CanteenApi.Data.Migrations
                             t.HasCheckConstraint("CK_Orders_CancelReason", "[Status] <> 'Cancelled' OR [CancelReason] IS NOT NULL");
 
                             t.HasCheckConstraint("CK_Orders_Discount", "[DiscountAmount] >= 0 AND [DiscountAmount] <= [Subtotal]");
+
+                            t.HasCheckConstraint("CK_Orders_PaidAt", "[PaymentStatus] NOT IN ('Paid', 'Refunded') OR [PaidAt] IS NOT NULL");
+
+                            t.HasCheckConstraint("CK_Orders_PaymentStatus", "[PaymentStatus] IN ('Pending', 'Paid', 'Refunded', 'Failed')");
 
                             t.HasCheckConstraint("CK_Orders_Subtotal", "[Subtotal] > 0");
 
@@ -634,10 +662,18 @@ namespace CanteenApi.Data.Migrations
                     b.Property<int>("Amount")
                         .HasColumnType("int");
 
+                    b.Property<string>("CheckoutUrl")
+                        .HasMaxLength(500)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(500)");
+
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("datetime2(3)")
                         .HasDefaultValueSql("SYSUTCDATETIME()");
+
+                    b.Property<DateTime?>("ExpiresAt")
+                        .HasColumnType("datetime2(3)");
 
                     b.Property<string>("Method")
                         .IsRequired()
@@ -652,6 +688,19 @@ namespace CanteenApi.Data.Migrations
 
                     b.Property<DateTime?>("PaidAt")
                         .HasColumnType("datetime2(3)");
+
+                    b.Property<string>("PaymentLinkId")
+                        .HasMaxLength(64)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(64)");
+
+                    b.Property<long?>("ProviderOrderCode")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("QrCode")
+                        .HasMaxLength(1000)
+                        .IsUnicode(false)
+                        .HasColumnType("varchar(1000)");
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -668,6 +717,10 @@ namespace CanteenApi.Data.Migrations
 
                     b.HasIndex("OrderId");
 
+                    b.HasIndex("ProviderOrderCode")
+                        .IsUnique()
+                        .HasFilter("[ProviderOrderCode] IS NOT NULL");
+
                     b.HasIndex("TransactionRef")
                         .IsUnique()
                         .HasFilter("[TransactionRef] IS NOT NULL");
@@ -677,6 +730,10 @@ namespace CanteenApi.Data.Migrations
                             t.HasCheckConstraint("CK_Payments_Amount", "[Amount] >= 0");
 
                             t.HasCheckConstraint("CK_Payments_PaidAt", "[Status] <> 'Paid' OR [PaidAt] IS NOT NULL");
+
+                            t.HasCheckConstraint("CK_Payments_ProviderMethod", "[ProviderOrderCode] IS NULL OR [Method] = 'BankTransfer'");
+
+                            t.HasCheckConstraint("CK_Payments_ProviderOrderCode", "[ProviderOrderCode] IS NULL OR [ProviderOrderCode] > 0");
                         });
                 });
 

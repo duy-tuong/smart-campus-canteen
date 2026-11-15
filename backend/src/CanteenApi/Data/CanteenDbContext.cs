@@ -41,8 +41,17 @@ public class CanteenDbContext(DbContextOptions<CanteenDbContext> options) : DbCo
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
     {
         // Mọi DateTime lưu dạng datetime2 (chính xác hơn datetime cũ), giá trị luôn là UTC.
-        configurationBuilder.Properties<DateTime>().HaveColumnType("datetime2(3)");
+        // datetime2 không lưu múi giờ → khi đọc ra gắn Kind=Utc để JSON trả về dạng "...Z"
+        // (nếu không, app sẽ hiểu nhầm là giờ địa phương và lệch 7 tiếng).
+        configurationBuilder.Properties<DateTime>()
+            .HaveColumnType("datetime2(3)")
+            .HaveConversion<UtcDateTimeConverter>();
     }
+
+    /// <summary>Ghi: đổi giờ địa phương (nếu có) sang UTC. Đọc: gắn Kind=Utc.</summary>
+    internal sealed class UtcDateTimeConverter() : Microsoft.EntityFrameworkCore.Storage.ValueConversion.ValueConverter<DateTime, DateTime>(
+        v => v.Kind == DateTimeKind.Local ? v.ToUniversalTime() : v,
+        v => DateTime.SpecifyKind(v, DateTimeKind.Utc));
 
     public override int SaveChanges(bool acceptAllChangesOnSuccess)
     {

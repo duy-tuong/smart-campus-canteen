@@ -7,6 +7,7 @@ using CanteenApi.Middleware;
 using CanteenApi.OpenApi;
 using CanteenApi.Options;
 using CanteenApi.Services;
+using CanteenApi.Services.Ordering;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
@@ -16,6 +17,12 @@ var builder = WebApplication.CreateBuilder(args);
 // ---------- Cấu hình ----------
 builder.Services.Configure<FirebaseOptions>(
     builder.Configuration.GetSection(FirebaseOptions.SectionName));
+builder.Services.AddOptions<CanteenOptions>()
+    .Bind(builder.Configuration.GetSection(CanteenOptions.SectionName))
+    .ValidateDataAnnotations()
+    .Validate(o => o.CloseTime > o.OpenTime, "Canteen:CloseTime phải sau Canteen:OpenTime.")
+    .ValidateOnStart();
+builder.Services.Configure<PayOsOptions>(builder.Configuration.GetSection(PayOsOptions.SectionName));
 
 // ---------- MVC + JSON + lỗi chuẩn ----------
 builder.Services
@@ -66,6 +73,8 @@ builder.Services.AddHttpClient();
 builder.Services.AddScoped<UserService>();
 builder.Services.AddScoped<CategoryService>();
 builder.Services.AddScoped<FoodService>();
+builder.Services.AddScoped<VoucherService>();
+builder.Services.AddScoped<OrderPricingService>();
 
 var app = builder.Build();
 
