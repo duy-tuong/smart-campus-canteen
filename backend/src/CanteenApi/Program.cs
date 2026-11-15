@@ -8,7 +8,9 @@ using CanteenApi.OpenApi;
 using CanteenApi.Options;
 using CanteenApi.Services;
 using CanteenApi.Services.Ordering;
+using CanteenApi.Services.Notifications;
 using CanteenApi.Services.Payments;
+using CanteenApi.Services.Realtime;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
@@ -83,15 +85,24 @@ builder.Services.AddScoped<OrderPricingService>();
 builder.Services.AddScoped<OrderService>();
 builder.Services.AddScoped<OrderLifecycleService>();
 builder.Services.AddScoped<PaymentService>();
+builder.Services.AddScoped<NotificationService>();
+
+// ---------- Đồng bộ realtime lên Firebase (hàng đợi trong bộ nhớ + worker ghi nền) ----------
+builder.Services.AddSingleton<RealtimeQueue>();
+builder.Services.AddSingleton<IRealtimePublisher>(sp => sp.GetRequiredService<RealtimeQueue>());
+builder.Services.AddScoped<RealtimeSyncService>();
 
 // ---------- Thanh toán payOS ----------
 builder.Services.AddSingleton<IPaymentGateway, PayOsGateway>();
 
 // ---------- Tác vụ chạy nền (tắt trong môi trường test bằng Workers:Enabled=false) ----------
 builder.Services.AddSingleton<PaymentStatusPoller>();
+builder.Services.AddSingleton<UnpaidOrderCanceller>();
 if (builder.Configuration.GetValue("Workers:Enabled", true))
 {
     builder.Services.AddHostedService(sp => sp.GetRequiredService<PaymentStatusPoller>());
+    builder.Services.AddHostedService(sp => sp.GetRequiredService<UnpaidOrderCanceller>());
+    builder.Services.AddHostedService<RealtimeSyncWorker>();
 }
 
 var app = builder.Build();

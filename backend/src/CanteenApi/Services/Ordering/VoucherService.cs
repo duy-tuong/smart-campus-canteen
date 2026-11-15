@@ -38,7 +38,7 @@ public sealed class VoucherService(CanteenDbContext db, TimeProvider clock, ILog
 
         if (subtotal < voucher.MinOrderAmount)
             return Fail(normalized, ErrorCodes.VoucherMinOrder,
-                $"Đơn tối thiểu {voucher.MinOrderAmount:N0}đ để dùng mã này (còn thiếu {voucher.MinOrderAmount - subtotal:N0}đ).");
+                $"Đơn tối thiểu {Money.Format(voucher.MinOrderAmount)} để dùng mã này (còn thiếu {Money.Format(voucher.MinOrderAmount - subtotal)}).");
 
         if (voucher.UsageLimit is { } limit && voucher.UsedCount >= limit)
             return Fail(normalized, ErrorCodes.VoucherExhausted, "Mã giảm giá đã hết lượt sử dụng.");
@@ -48,7 +48,7 @@ public sealed class VoucherService(CanteenDbContext db, TimeProvider clock, ILog
 
         var discount = CalculateDiscount(voucher, subtotal);
         return new VoucherEvaluation(
-            new VoucherCheckDto(normalized, true, discount, null, $"Áp dụng thành công: giảm {discount:N0}đ."),
+            new VoucherCheckDto(normalized, true, discount, null, $"Áp dụng thành công: giảm {Money.Format(discount)}."),
             voucher.Id);
     }
 

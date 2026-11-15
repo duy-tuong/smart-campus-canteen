@@ -40,7 +40,10 @@ public sealed class GlobalExceptionHandler(ILogger<GlobalExceptionHandler> logge
                   "Đã có lỗi xảy ra. Vui lòng thử lại sau."),
         };
 
-        if (status >= 500)
+        if (exception is AppException && status >= 500)
+            logger.LogError("Request {Method} {Path} failed {Status} {Code}: {Message}",
+                http.Request.Method, http.Request.Path, status, code, exception.Message);
+        else if (status >= 500)
             logger.LogError(exception, "Unhandled exception on {Method} {Path}", http.Request.Method, http.Request.Path);
         else
             logger.LogInformation("Request failed {Status} {Code}: {Message}", status, code, exception.Message);

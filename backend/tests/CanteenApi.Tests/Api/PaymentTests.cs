@@ -14,7 +14,7 @@ namespace CanteenApi.Tests.Api;
 /// <summary>Thanh toán chuyển khoản (payOS): tạo link, webhook, đồng bộ chủ động, staff xác nhận, hủy và hoàn tiền.</summary>
 public class PaymentTests(CanteenApiFactory factory) : ApiTestBase(factory)
 {
-    private const long FirstOrderCode = 2611160001; // yyMMdd(16/11/2026) × 10000 + #001
+    private const long FirstOrderCode = 261116100000001; // yyMMddHHmmss (10:00:00 16/11/2026 giờ VN) × 1000 + #001
 
     // ------------------------- Tạo link thanh toán -------------------------
 
@@ -25,14 +25,14 @@ public class PaymentTests(CanteenApiFactory factory) : ApiTestBase(factory)
 
         Assert.Equal((PaymentMethod.BankTransfer, PaymentStatus.Pending), (order.PaymentMethod, order.PaymentStatus));
         var p = order.Payment!;
-        Assert.Equal(("SC1160001", "0123456789", "CANTEEN DEMO", "970422"),
+        Assert.Equal(("SC0000001", "0123456789", "CANTEEN DEMO", "970422"),
             (p.TransferContent, p.BankAccountNumber, p.BankAccountName, p.BankBin));
         Assert.StartsWith("https://pay.payos.vn/", p.CheckoutUrl);
         Assert.False(string.IsNullOrEmpty(p.QrCode));
         Assert.Equal(CanteenApiFactory.Now.UtcDateTime.AddMinutes(15), p.ExpiresAt);
 
         var link = Assert.Single(Factory.Payments.CreatedLinks);
-        Assert.Equal((FirstOrderCode, 40_000, "SC1160001"), (link.OrderCode, link.Amount, link.Description));
+        Assert.Equal((FirstOrderCode, 40_000, "SC0000001"), (link.OrderCode, link.Amount, link.Description));
         Assert.Contains($"/payment/result?orderId={order.Id}", link.ReturnUrl);
     }
 

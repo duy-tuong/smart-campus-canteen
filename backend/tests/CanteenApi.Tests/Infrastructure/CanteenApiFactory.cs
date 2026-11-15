@@ -36,6 +36,7 @@ public sealed class CanteenApiFactory : WebApplicationFactory<Program>, IAsyncLi
 
     public FakeFirebaseAuthService Firebase { get; } = new();
     public FakePaymentGateway Payments { get; } = new();
+    public FakeRealtimePublisher Realtime { get; } = new();
     public TestClock Clock { get; } = new(Now);
     public string WebRoot => _webRoot;
 
@@ -68,6 +69,9 @@ public sealed class CanteenApiFactory : WebApplicationFactory<Program>, IAsyncLi
             services.RemoveAll<CanteenApi.Services.Payments.IPaymentGateway>();
             services.AddSingleton<CanteenApi.Services.Payments.IPaymentGateway>(Payments);
 
+            services.RemoveAll<CanteenApi.Services.Realtime.IRealtimePublisher>();
+            services.AddSingleton<CanteenApi.Services.Realtime.IRealtimePublisher>(Realtime);
+
             services.RemoveAll<TimeProvider>();
             services.AddSingleton<TimeProvider>(Clock);
         });
@@ -88,6 +92,7 @@ public sealed class CanteenApiFactory : WebApplicationFactory<Program>, IAsyncLi
         Clock.Set(Now);
         Firebase.Reset();
         Payments.Reset();
+        Realtime.Reset();
         ((MemoryCache)Services.GetRequiredService<IMemoryCache>()).Compact(1.0); // xóa cache phân quyền
 
         await using var scope = Services.CreateAsyncScope();

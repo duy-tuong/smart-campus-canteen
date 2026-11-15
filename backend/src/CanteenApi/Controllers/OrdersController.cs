@@ -94,6 +94,35 @@ public class OrdersController(
     }
 
     /// <summary>
+    /// Staff chuyển trạng thái: received → cooking → ready → completed.
+    /// Đơn chuyển khoản phải đã thanh toán; đơn tiền mặt khi "completed" được ghi nhận đã thu tiền.
+    /// Mỗi lần chuyển: ghi lịch sử, thông báo cho sinh viên, đồng bộ realtime lên Firebase.
+    /// </summary>
+    /// <response code="409">CONCURRENCY_CONFLICT — staff khác vừa cập nhật đơn này.</response>
+    /// <response code="422">INVALID_STATUS_TRANSITION (kèm allowedStatuses), PAYMENT_REQUIRED.</response>
+    [HttpPatch("{id}/status")]
+    [Authorize(Policy = Policies.StaffOrAdmin)]
+    public async Task<OrderDetailDto> ChangeStatus(string id, [FromBody] UpdateOrderStatusRequest request,
+        [FromServices] OrderLifecycleService lifecycle, CancellationToken ct)
+    {
+        await lifecycle.ChangeStatusAsync(id, request.Status!.Value, request.Note, me.Uid, ct);
+        return await orders.GetDetailAsync(id, me.Uid, isStaff: true, ct);
+    }
+
+    /// <summary>
+    /// Hủy đơn: sinh viên hủy đơn của mình khi còn "Đã nhận"; staff/admin hủy khi "Đã nhận" hoặc "Đang nấu".
+    /// Trả lượt voucher, hủy link thanh toán; đơn đã trả tiền được ghi nhận cần hoàn tiền.
+    /// </summary>
+    /// <response code="422">ORDER_NOT_CANCELLABLE</response>
+    [HttpPost("{id}/cancel")]
+    public async Task<OrderDetailDto> Cancel(string id, [FromBody] CancelOrderRequest request,
+        [FromServices] OrderLifecycleService lifecycle, CancellationToken ct)
+    {
+        await lifecycle.CancelByRequestAsync(id, me.Uid, me.IsStaffOrAdmin, request.Reason, ct);
+        return await orders.GetDetailAsync(id, me.Uid, me.IsStaffOrAdmin, ct);
+    }
+
+    /// <summary>
     /// Bảng đơn của căn-tin: theo ngày (mặc định hôm nay), lọc nhiều trạng thái
     /// (?status=received&amp;status=cooking), tìm theo mã nhận món / tên / MSSV; đơn cần giao sớm nhất lên đầu.
     /// </summary>

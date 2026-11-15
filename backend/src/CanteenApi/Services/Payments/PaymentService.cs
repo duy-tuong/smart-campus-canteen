@@ -2,7 +2,9 @@ using CanteenApi.Common;
 using CanteenApi.Data;
 using CanteenApi.Models;
 using CanteenApi.Options;
+using CanteenApi.Services.Notifications;
 using CanteenApi.Services.Ordering;
+using CanteenApi.Services.Realtime;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
@@ -30,14 +32,21 @@ public sealed class PaymentService(
     CanteenDbContext db,
     IPaymentGateway gateway,
     OrderLifecycleService lifecycle,
+    NotificationService notifications,
+    IRealtimePublisher realtime,
     IPublicUrlBuilder urls,
     IOptions<CanteenOptions> canteenOptions,
     TimeProvider clock,
     ILogger<PaymentService> logger)
 {
-    /// <summary>orderCode gửi payOS: yyMMdd × 10000 + số thứ tự trong ngày (duy nhất, ví dụ 2611160015).</summary>
-    public static long ProviderOrderCodeFor(DateOnly day, string pickupCode) =>
-        long.Parse(day.ToString("yyMMdd")) * 10_000 + int.Parse(pickupCode);
+    /// <summary>
+    /// orderCode gửi payOS = yyMMddHHmmss (giờ VN lúc đặt) × 1000 + số thứ tự trong ngày, ví dụ 261116100512015.
+    /// payOS yêu cầu orderCode KHÔNG BAO GIỜ trùng trong một kênh thanh toán (kể cả với đơn cũ đã xóa) —
+    /// chỉ dùng "ngày + số thứ tự" sẽ bị lặp lại khi dữ liệu bị reset/khôi phục (payOS báo lỗi 231).
+    /// 15 chữ số, nằm trong giới hạn số nguyên an toàn (2^53).
+    /// </summary>
+    public static long ProviderOrderCodeFor(DateTime createdAtVietnam, string pickupCode) =>
+        long.Parse(createdAtVietnam.ToString("yyMMddHHmmss")) * 1000 + int.Parse(pickupCode) % 1000;
 
     /// <summary>Nội dung chuyển khoản ≤ 9 ký tự (giới hạn của payOS với tài khoản không liên kết): "SC" + 7 số cuối.</summary>
     public static string TransferContentFor(long orderCode) => $"SC{orderCode % 10_000_000:D7}";
@@ -194,6 +203,9 @@ public sealed class PaymentService(
             order.PaymentStatus = PaymentStatus.Paid;
         }
 
+        // Thông báo ghi cùng lần lưu với thay đổi thanh toán.
+        var notification = notifications.ForOrder(order, paidAfterCancel ? OrderEvent.Cancelled : OrderEvent.Paid);
+
         try
         {
             await db.SaveChangesAsync(ct);
@@ -214,6 +226,9 @@ public sealed class PaymentService(
             return MarkPaidResult.AlreadyPaid;
         }
 
+        realtime.PublishOrder(order.Id);
+        realtime.PublishNotification(notification.Id);
+
         if (paidAfterCancel)
         {
             logger.LogWarning("[{Source}] Đơn {OrderId} đã hủy nhưng nhận {Amount}đ (ref {Ref}) — CẦN HOÀN TIỀN",
@@ -222,7 +237,6 @@ public sealed class PaymentService(
         }
 
         logger.LogInformation("[{Source}] Đơn {OrderId} đã thanh toán {Amount}đ (ref {Ref})", source, order.Id, amount, reference);
-        // E4: thông báo "Đã xác nhận thanh toán" + đồng bộ realtime.
         return MarkPaidResult.Paid;
     }
 

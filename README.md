@@ -332,7 +332,7 @@ Hàm `MarkPaidAsync` bảo đảm:
 - chuyển khoản thiếu tiền thì không chuyển sang Paid;
 - tiền về sau khi đơn đã hủy thì ghi `Refunded` để staff hoàn tiền thủ công.
 
-`orderCode` gửi payOS = `yyMMdd × 10000 + số thứ tự trong ngày` (ví dụ `2611160015`). Nội dung chuyển khoản = `SC` + 7 số cuối (≤ 9 ký tự theo giới hạn payOS).
+`orderCode` gửi payOS = `yyMMddHHmmss × 1000 + số thứ tự trong ngày`, ví dụ `261116100512015` (15 chữ số, trong giới hạn số nguyên an toàn). payOS yêu cầu mã này **không bao giờ trùng** trong một kênh, kể cả với đơn đã xóa. Vì vậy mã có kèm thời điểm đặt: chỉ dùng "ngày + số thứ tự" sẽ bị trùng sau khi reset dữ liệu (payOS báo lỗi 231). Nội dung chuyển khoản = `SC` + 7 số cuối (≤ 9 ký tự theo giới hạn payOS).
 
 **Cấu hình payOS:**
 1. Lấy Client ID / API Key / Checksum Key tại my.payos.vn, mục **Kênh thanh toán**.
@@ -353,6 +353,53 @@ Muốn nhận webhook khi chạy local:
 
 Không có tunnel thì poller vẫn tự xác nhận, chậm tối đa khoảng 10 giây.
 
+### Trạng thái đơn, hủy đơn & thông báo
+
+```
+Received (Đã nhận) ──► Cooking (Đang nấu) ──► Ready (Mời nhận món) ──► Completed (Hoàn thành)
+      │                       │
+      └───────────────────────┴──► Cancelled (Đã hủy)
+```
+
+| Method | Endpoint | Quyền | Mô tả |
+|---|---|---|---|
+| PATCH | `/api/orders/{id}/status` | Staff/Admin | `{ "status": "cooking", "note"?: "..." }`. Chỉ được đi theo sơ đồ trên, sai thì trả 422 `INVALID_STATUS_TRANSITION` kèm `allowedStatuses`. Đơn chuyển khoản chưa trả thì không được nấu (422 `PAYMENT_REQUIRED`). Đơn tiền mặt khi `completed` được ghi nhận đã thu tiền (`CASH-yyMMdd-001`) |
+| POST | `/api/orders/{id}/cancel` | Chủ đơn / Staff | `{ "reason": "..." }` (5–300 ký tự). Sinh viên chỉ hủy khi `received`, staff hủy khi `received`/`cooking`, ngoài ra trả 422 `ORDER_NOT_CANCELLABLE`. Khi hủy: trả lượt voucher, hủy link payOS, đơn đã trả tiền chuyển sang `refunded` (staff hoàn thủ công) |
+| GET | `/api/notifications` | ActiveUser | Thông báo của tôi (phân trang) kèm `unreadCount` |
+| PATCH | `/api/notifications/{id}/read` | ActiveUser | Đánh dấu đã đọc. Thông báo của người khác trả 404 |
+| POST | `/api/notifications/read-all` | ActiveUser | Đánh dấu tất cả đã đọc |
+
+- **Chi tiết đơn** có thêm `allowedNextStatuses` (chỉ với staff), để app hiện đúng nút "Bắt đầu nấu", "Xong món", "Đã giao".
+- **Hai staff bấm cùng lúc:** chỉ một người thành công, người kia nhận 409 (nhờ `RowVersion`).
+- **Thông báo gửi sinh viên:** đặt món thành công, đã nhận thanh toán, đang nấu, mời nhận món, hoàn thành, bị hủy (kèm lý do và thông tin hoàn tiền). Sinh viên **tự hủy** thì không nhận thông báo. Thông báo được ghi **cùng transaction** với thay đổi của đơn.
+- **Tự hủy đơn quá hạn:** worker chạy mỗi phút hủy đơn chuyển khoản quá 15 phút chưa trả, lý do "Quá hạn thanh toán", người thao tác là "Hệ thống". Trước khi hủy, worker hỏi payOS một lần để không hủy nhầm đơn khách vừa trả.
+
+### Realtime qua Firebase Realtime Database
+
+SQL Server là nguồn dữ liệu chính. Firebase chỉ giữ **bản sao để app nghe realtime**, và app **chỉ được đọc**.
+
+**Cách đồng bộ:**
+- Mỗi thay đổi được đưa vào hàng đợi trong bộ nhớ. `RealtimeSyncWorker` đọc trạng thái mới nhất từ SQL Server rồi ghi đè node trên Firebase.
+- API không chờ Firebase. Lỗi mạng thì thử lại 5 lần (1s, 2s, 4s, 8s, 16s).
+- Khi khởi động: đồng bộ lại các đơn đang xử lý.
+- Mỗi giờ: dọn các đơn đã xong hoặc đã hủy quá 24 giờ.
+
+| Đường dẫn | Ai đọc được (Security Rules) | Nội dung |
+|---|---|---|
+| `orders/{orderId}` | Chủ đơn; staff/admin | `userId`, `customerName`, `pickupCode`, `status`, `paymentMethod`, `paymentStatus`, `totalAmount`, `totalItems`, `items[]` (`name`, `quantity`, `options`, `note`), `note`, `cancelReason`, `pickupTime`, `estimatedReadyAt`, `createdAt`, `updatedAt` |
+| `orders` + `orderBy=userId&equalTo=<uid>` | Chính người đó | Danh sách đơn của tôi (realtime) |
+| `orders` + `orderBy=status` | Staff/admin | Bảng đơn của căn-tin (realtime) |
+| `notifications/{uid}/n{id}` | Chính người đó | `title`, `body`, `type`, `refId` (orderId), `isRead`, `createdAt` |
+
+**Quy ước dữ liệu:**
+- Enum dạng chuỗi camelCase (`"cooking"`), thời gian dạng **epoch mili-giây**.
+- Khóa thông báo có tiền tố `n` (`n12`), vì Realtime Database tự đổi các khóa toàn số liên tiếp thành **mảng**.
+
+Đã kiểm chứng với Firebase thật:
+- trạng thái cập nhật lên Firebase sau khoảng **0,2–0,3 giây**;
+- người khác đọc đơn hoặc thông báo của sinh viên bị chặn `Permission denied`;
+- sinh viên không đọc được toàn bộ `orders`.
+
 ### Cấu hình vận hành căn-tin (`appsettings.json`)
 
 | Khóa | Mặc định | Ý nghĩa |
@@ -364,6 +411,8 @@ Không có tunnel thì poller vẫn tự xác nhận, chậm tối đa khoảng 
 | `Canteen:MinPickupLeadMinutes` | 10 | Giờ hẹn lấy món tối thiểu sau lúc đặt |
 | `Canteen:PublicBaseUrl` | (trống) | URL public (tunnel) cho returnUrl/webhook payOS |
 | `PayOS:Enabled` | `false` | Bật thanh toán chuyển khoản qua payOS. Khóa đặt trong user-secrets |
+| `Workers:Enabled` | `true` | Bật các tác vụ chạy nền (poller payOS, tự hủy đơn quá hạn, đồng bộ Firebase) |
+| `Workers:PaymentPollSeconds` | 10 | Chu kỳ hỏi payOS trạng thái thanh toán |
 
 Ghi đè cấu hình bằng biến môi trường (dùng `__` thay cho `:`), không cần sửa file. Ví dụ để demo sau 19:00:
 
@@ -378,7 +427,7 @@ cd backend
 dotnet test
 ```
 
-Bộ test nằm trong `backend/tests/CanteenApi.Tests` (xUnit), gồm **147 test, chạy khoảng 10 giây**. Test chạy **toàn bộ backend thật trong bộ nhớ** (`WebApplicationFactory`): routing, phân quyền, validate, EF Core và SQL Server thật. Chỉ một số phần được thay thế:
+Bộ test nằm trong `backend/tests/CanteenApi.Tests` (xUnit), gồm **164 test, chạy khoảng 11 giây**. Test chạy **toàn bộ backend thật trong bộ nhớ** (`WebApplicationFactory`): routing, phân quyền, validate, EF Core và SQL Server thật. Chỉ một số phần được thay thế:
 
 | Thành phần | Trong test |
 |---|---|
@@ -386,6 +435,8 @@ Bộ test nằm trong `backend/tests/CanteenApi.Tests` (xUnit), gồm **147 test
 | Xác thực Firebase | `TestAuthHandler` đọc danh tính giả từ header (`X-Test-Uid`, `X-Test-Role`…) |
 | Firebase Admin | `FakeFirebaseAuthService`: không gọi mạng, ghi lại thao tác gán vai trò và khóa tài khoản để kiểm tra |
 | payOS | `FakePaymentGateway`: không gọi mạng, dựng được kịch bản đã trả tiền, payOS lỗi, webhook sai chữ ký |
+| Firebase RTDB | `FakeRealtimePublisher`: ghi lại các đơn và thông báo được đưa lên hàng đợi đồng bộ |
+| Tác vụ chạy nền | Tắt (`Workers:Enabled=false`). Test gọi trực tiếp `RunOnceAsync` của poller và worker tự hủy, tua `TestClock` qua 15 phút |
 | Đồng hồ | `TestClock` cố định 10:00 ngày 16/11/2026 giờ Việt Nam, có thể tua sang ngày khác |
 | `wwwroot` | Thư mục tạm, tự xóa sau khi chạy (ảnh upload không làm bẩn source) |
 

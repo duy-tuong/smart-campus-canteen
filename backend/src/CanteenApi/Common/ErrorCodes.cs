@@ -42,6 +42,11 @@ public static class ErrorCodes
     public const string TooManyActiveOrders = "TOO_MANY_ACTIVE_ORDERS";
     public const string PaymentMethodUnavailable = "PAYMENT_METHOD_UNAVAILABLE";
 
+    // Vòng đời đơn
+    public const string InvalidStatusTransition = "INVALID_STATUS_TRANSITION";
+    public const string PaymentRequired = "PAYMENT_REQUIRED";
+    public const string OrderNotCancellable = "ORDER_NOT_CANCELLABLE";
+
     // Thanh toán
     public const string PaymentProviderError = "PAYMENT_PROVIDER_ERROR";
     public const string PaymentNotPending = "PAYMENT_NOT_PENDING";

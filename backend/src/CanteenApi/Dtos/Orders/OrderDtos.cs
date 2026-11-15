@@ -95,7 +95,22 @@ public sealed record OrderDetailDto(
     IReadOnlyList<OrderStatusEventDto> History,
     PaymentInfoDto? Payment,
     /// <summary>Người đang xem có được hủy đơn này không (để app ẩn/hiện nút Hủy).</summary>
-    bool CanCancel);
+    bool CanCancel,
+    /// <summary>Chỉ với staff/admin: trạng thái được chuyển tiếp (để app hiện đúng nút "Bắt đầu nấu", "Xong món"...).</summary>
+    IReadOnlyList<OrderStatus> AllowedNextStatuses);
+
+/// <summary>Staff chuyển trạng thái đơn.</summary>
+public sealed record UpdateOrderStatusRequest(
+    [Required(ErrorMessage = "Vui lòng chọn trạng thái mới (cooking | ready | completed).")]
+    OrderStatus? Status,
+    [StringLength(300, ErrorMessage = "Ghi chú tối đa 300 ký tự.")]
+    string? Note);
+
+/// <summary>Hủy đơn (bắt buộc nêu lý do — hiển thị cho khách và lưu vào lịch sử).</summary>
+public sealed record CancelOrderRequest(
+    [Required(ErrorMessage = "Vui lòng nhập lý do hủy.")]
+    [StringLength(300, MinimumLength = 5, ErrorMessage = "Lý do hủy dài từ 5 đến 300 ký tự.")]
+    string Reason);
 
 public sealed record OrderSummaryDto(
     string Id,

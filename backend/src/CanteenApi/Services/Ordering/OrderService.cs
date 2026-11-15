@@ -5,7 +5,9 @@ using CanteenApi.Data;
 using CanteenApi.Dtos.Orders;
 using CanteenApi.Models;
 using CanteenApi.Options;
+using CanteenApi.Services.Notifications;
 using CanteenApi.Services.Payments;
+using CanteenApi.Services.Realtime;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
@@ -19,6 +21,8 @@ public sealed class OrderService(
     VoucherService vouchers,
     IPaymentGateway gateway,
     PaymentService payments,
+    NotificationService notifications,
+    IRealtimePublisher realtime,
     IPublicUrlBuilder urls,
     IOptions<CanteenOptions> canteenOptions,
     TimeProvider clock,
@@ -57,7 +61,7 @@ public sealed class OrderService(
         var nowVn = VietnamTime.Now(clock);
         EnsureOpen(nowVn);
 
-        string orderId;
+        Order created;
         try
         {
             await using var tx = await db.Database.BeginTransactionAsync(IsolationLevel.ReadCommitted, ct);
@@ -142,7 +146,7 @@ public sealed class OrderService(
                         Method = method, Amount = priced.TotalAmount, Status = PaymentStatus.Pending, CreatedAt = nowUtc,
                         // Giữ chỗ orderCode cho payOS ngay trong transaction (UNIQUE) — link được tạo sau khi commit.
                         ProviderOrderCode = method == PaymentMethod.BankTransfer
-                            ? PaymentService.ProviderOrderCodeFor(today, pickupCode)
+                            ? PaymentService.ProviderOrderCodeFor(nowVn, pickupCode)
                             : null,
                     },
                 },
@@ -151,7 +155,7 @@ public sealed class OrderService(
             db.Orders.Add(order);
             await db.SaveChangesAsync(ct);
             await tx.CommitAsync(ct);
-            orderId = order.Id;
+            created = order;
 
             logger.LogInformation("Order {OrderId} #{Code} created by {Uid}: {Total}đ ({Method})",
                 order.Id, order.PickupCode, uid, order.TotalAmount, method);
@@ -166,10 +170,14 @@ public sealed class OrderService(
         // Chuyển khoản: tạo link/QR payOS SAU khi commit (không giữ khóa trong lúc gọi mạng).
         // payOS lỗi → đơn tự hủy (hoàn suất, hoàn voucher) và trả 502 PAYMENT_PROVIDER_ERROR.
         if (method == PaymentMethod.BankTransfer)
-            await payments.InitiateBankTransferAsync(orderId, ct);
+            await payments.InitiateBankTransferAsync(created.Id, ct);
 
-        // E4: đưa đơn vào hàng đợi đồng bộ realtime (Firebase).
-        return (await GetDetailAsync(orderId, uid, isStaff: false, ct), true);
+        var placed = notifications.ForOrder(created, OrderEvent.Placed);
+        await db.SaveChangesAsync(ct);
+        realtime.PublishOrder(created.Id);
+        realtime.PublishNotification(placed.Id);
+
+        return (await GetDetailAsync(created.Id, uid, isStaff: false, ct), true);
     }
 
     // ============================ Truy vấn ============================
@@ -212,7 +220,8 @@ public sealed class OrderService(
                 payment.Status == PaymentStatus.Pending ? payment.QrCode : null,
                 payment.ExpiresAt, payment.TransferContent, payment.BankBin,
                 payment.BankAccountNumber, payment.BankAccountName),
-            CanCancel(order.Status, isStaff, order.UserId == viewerUid));
+            CanCancel(order.Status, isStaff, order.UserId == viewerUid),
+            isStaff ? OrderLifecycleService.NextStatuses(order.Status) : []);
     }
 
     /// <summary>Đơn của tôi, mới nhất trước.</summary>
