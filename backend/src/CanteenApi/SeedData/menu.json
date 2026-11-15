@@ -1,24 +1,38 @@
 {
   "categories": [
-    { "id": "rice", "name": "Cơm", "icon": "rice_bowl", "sortOrder": 1 },
-    { "id": "noodle", "name": "Mì & Bún", "icon": "ramen_dining", "sortOrder": 2 },
-    { "id": "drink", "name": "Nước uống", "icon": "local_drink", "sortOrder": 3 },
-    { "id": "snack", "name": "Ăn vặt", "icon": "bakery_dining", "sortOrder": 4 }
-  ],
-  "foods": [
-    { "id": "f01", "name": "Cơm gà xối mỡ", "description": "Gà chiên giòn, cơm chiên, dưa leo", "price": 35000, "imageUrl": "/images/com-ga-xoi-mo.jpg", "categoryId": "rice", "isAvailable": true, "prepTimeMinutes": 10 },
-    { "id": "f02", "name": "Cơm tấm sườn bì chả", "description": "Sườn nướng, bì, chả trứng, nước mắm", "price": 40000, "imageUrl": "/images/com-tam.jpg", "categoryId": "rice", "isAvailable": true, "prepTimeMinutes": 10 },
-    { "id": "f03", "name": "Cơm chiên dương châu", "description": "Cơm chiên trứng, lạp xưởng, rau củ", "price": 30000, "imageUrl": "/images/com-chien.jpg", "categoryId": "rice", "isAvailable": true, "prepTimeMinutes": 8 },
-    { "id": "f04", "name": "Cơm bò lúc lắc", "description": "Bò xào lúc lắc, khoai tây, salad", "price": 45000, "imageUrl": "/images/com-bo.jpg", "categoryId": "rice", "isAvailable": true, "prepTimeMinutes": 12 },
-    { "id": "f05", "name": "Phở bò tái", "description": "Bánh phở, bò tái, nước dùng hầm xương", "price": 40000, "imageUrl": "/images/pho-bo.jpg", "categoryId": "noodle", "isAvailable": true, "prepTimeMinutes": 7 },
-    { "id": "f06", "name": "Bún bò Huế", "description": "Bún, bò, giò heo, chả cua", "price": 40000, "imageUrl": "/images/bun-bo.jpg", "categoryId": "noodle", "isAvailable": true, "prepTimeMinutes": 7 },
-    { "id": "f07", "name": "Mì xào hải sản", "description": "Mì trứng xào tôm, mực, rau cải", "price": 38000, "imageUrl": "/images/mi-xao.jpg", "categoryId": "noodle", "isAvailable": true, "prepTimeMinutes": 10 },
-    { "id": "f08", "name": "Trà đào cam sả", "description": "Trà đào, cam tươi, sả", "price": 20000, "imageUrl": "/images/tra-dao.jpg", "categoryId": "drink", "isAvailable": true, "prepTimeMinutes": 3 },
-    { "id": "f09", "name": "Cà phê sữa đá", "description": "Cà phê phin, sữa đặc", "price": 18000, "imageUrl": "/images/ca-phe.jpg", "categoryId": "drink", "isAvailable": true, "prepTimeMinutes": 3 },
-    { "id": "f10", "name": "Trà sữa trân châu", "description": "Trà sữa, trân châu đường đen", "price": 25000, "imageUrl": "/images/tra-sua.jpg", "categoryId": "drink", "isAvailable": true, "prepTimeMinutes": 4 },
-    { "id": "f11", "name": "Nước suối", "description": "Chai 500ml", "price": 8000, "imageUrl": "/images/nuoc-suoi.jpg", "categoryId": "drink", "isAvailable": true, "prepTimeMinutes": 1 },
-    { "id": "f12", "name": "Bánh mì thịt", "description": "Bánh mì pate, thịt nguội, rau", "price": 20000, "imageUrl": "/images/banh-mi.jpg", "categoryId": "snack", "isAvailable": true, "prepTimeMinutes": 3 },
-    { "id": "f13", "name": "Khoai tây chiên", "description": "Khoai tây chiên giòn, tương cà", "price": 20000, "imageUrl": "/images/khoai-tay.jpg", "categoryId": "snack", "isAvailable": true, "prepTimeMinutes": 5 },
-    { "id": "f14", "name": "Xúc xích nướng", "description": "Xúc xích Đức nướng, tương ớt", "price": 15000, "imageUrl": "/images/xuc-xich.jpg", "categoryId": "snack", "isAvailable": true, "prepTimeMinutes": 4 }
+    {
+      "name": "Cơm", "icon": "rice_bowl", "sortOrder": 1,
+      "foods": [
+        {"name": "Cơm gà xối mỡ", "description": "Gà chiên giòn, cơm chiên, dưa leo", "price": 35000, "imageUrl": "/images/com-ga-xoi-mo.jpg", "isAvailable": true, "prepTimeMinutes": 10},
+        {"name": "Cơm tấm sườn bì chả", "description": "Sườn nướng, bì, chả trứng, nước mắm", "price": 40000, "imageUrl": "/images/com-tam.jpg", "isAvailable": true, "prepTimeMinutes": 10},
+        {"name": "Cơm chiên dương châu", "description": "Cơm chiên trứng, lạp xưởng, rau củ", "price": 30000, "imageUrl": "/images/com-chien.jpg", "isAvailable": true, "prepTimeMinutes": 8},
+        {"name": "Cơm bò lúc lắc", "description": "Bò xào lúc lắc, khoai tây, salad", "price": 45000, "imageUrl": "/images/com-bo.jpg", "isAvailable": true, "prepTimeMinutes": 12}
+      ]
+    },
+    {
+      "name": "Mì & Bún", "icon": "ramen_dining", "sortOrder": 2,
+      "foods": [
+        {"name": "Phở bò tái", "description": "Bánh phở, bò tái, nước dùng hầm xương", "price": 40000, "imageUrl": "/images/pho-bo.jpg", "isAvailable": true, "prepTimeMinutes": 7},
+        {"name": "Bún bò Huế", "description": "Bún, bò, giò heo, chả cua", "price": 40000, "imageUrl": "/images/bun-bo.jpg", "isAvailable": true, "prepTimeMinutes": 7},
+        {"name": "Mì xào hải sản", "description": "Mì trứng xào tôm, mực, rau cải", "price": 38000, "imageUrl": "/images/mi-xao.jpg", "isAvailable": true, "prepTimeMinutes": 10}
+      ]
+    },
+    {
+      "name": "Nước uống", "icon": "local_drink", "sortOrder": 3,
+      "foods": [
+        {"name": "Trà đào cam sả", "description": "Trà đào, cam tươi, sả", "price": 20000, "imageUrl": "/images/tra-dao.jpg", "isAvailable": true, "prepTimeMinutes": 3},
+        {"name": "Cà phê sữa đá", "description": "Cà phê phin, sữa đặc", "price": 18000, "imageUrl": "/images/ca-phe.jpg", "isAvailable": true, "prepTimeMinutes": 3},
+        {"name": "Trà sữa trân châu", "description": "Trà sữa, trân châu đường đen", "price": 25000, "imageUrl": "/images/tra-sua.jpg", "isAvailable": true, "prepTimeMinutes": 4},
+        {"name": "Nước suối", "description": "Chai 500ml", "price": 8000, "imageUrl": "/images/nuoc-suoi.jpg", "isAvailable": true, "prepTimeMinutes": 1}
+      ]
+    },
+    {
+      "name": "Ăn vặt", "icon": "bakery_dining", "sortOrder": 4,
+      "foods": [
+        {"name": "Bánh mì thịt", "description": "Bánh mì pate, thịt nguội, rau", "price": 20000, "imageUrl": "/images/banh-mi.jpg", "isAvailable": true, "prepTimeMinutes": 3},
+        {"name": "Khoai tây chiên", "description": "Khoai tây chiên giòn, tương cà", "price": 20000, "imageUrl": "/images/khoai-tay.jpg", "isAvailable": true, "prepTimeMinutes": 5},
+        {"name": "Xúc xích nướng", "description": "Xúc xích Đức nướng, tương ớt", "price": 15000, "imageUrl": "/images/xuc-xich.jpg", "isAvailable": true, "prepTimeMinutes": 4}
+      ]
+    }
   ]
 }

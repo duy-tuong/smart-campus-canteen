@@ -16,19 +16,38 @@ Sinh viên xem thực đơn, đặt món trước và theo dõi trạng thái ch
 ┌──────────────────────────┐        │
 │ ASP.NET Core Web API     │  ghi   ▼
 │ (backend/) - .NET 10     ├──► Firebase Realtime Database
-│ xác minh token, nghiệp vụ│    categories · foods · users · orders
-└──────────────────────────┘
+│ xác minh token, nghiệp vụ│    orders/{id}: trạng thái realtime
+└────────────┬─────────────┘
+             │ EF Core
+             ▼
+      SQL Server (SmartCanteenDb)
+      Categories · Foods · Users · Orders · OrderItems
             ▲
-     Firebase Auth (Email/Password)
+     Firebase Auth (Email/Password) cấp ID token cho app
 ```
 
 | Thành phần | Vai trò |
 |---|---|
 | ASP.NET Core Web API | REST API cho thực đơn và đơn hàng. Xác minh Firebase ID token, tính tiền phía server, kiểm soát luồng trạng thái |
+| SQL Server (EF Core) | **Nguồn dữ liệu chính**: thực đơn, hồ sơ người dùng, toàn bộ đơn hàng và chi tiết đơn |
 | Firebase Auth | Đăng ký, đăng nhập, duy trì phiên (`authStateChanges`). Vai trò staff dùng custom claim |
-| Firebase Realtime Database | Thực đơn, hồ sơ người dùng, đơn hàng realtime. Chỉ backend được ghi thực đơn và đơn hàng |
+| Firebase Realtime Database | Bản sao các đơn đang xử lý để đẩy trạng thái realtime tới app. Chỉ backend được ghi |
 | SQLite (sqflite) | Lịch sử hóa đơn và giỏ hàng trên thiết bị, dùng được offline (CRUD đầy đủ) |
 | Provider | Trạng thái giỏ hàng, theme, menu, người dùng |
+
+Một đơn hàng dùng **cùng một `Id` (GUID)** ở cả ba nơi: SQL Server `Orders.Id`, Firebase `orders/{id}` và SQLite `orders.id`.
+
+### Lược đồ SQL Server
+
+```
+Categories 1 ──< Foods
+Users      1 ──< Orders 1 ──< OrderItems >── 1 Foods (FoodId NULL khi món bị xóa)
+```
+
+- Xóa danh mục còn món → bị chặn (`Restrict`).
+- Xóa đơn → xóa luôn chi tiết đơn (`Cascade`).
+- Xóa món → chi tiết đơn cũ giữ tên và giá, `FoodId = NULL` (`SetNull`).
+- Có các ràng buộc `CHECK` cho giá, số lượng và tổng tiền.
 
 ## Cấu trúc thư mục
 
@@ -43,6 +62,7 @@ Sinh viên xem thực đơn, đặt món trước và theo dõi trạng thái ch
 
 - Flutter 3.44+ (Dart 3.12+)
 - .NET SDK 10
+- SQL Server 2019+ (Developer/Express) hoặc LocalDB
 - Node.js 20+ (cho Firebase CLI và FlutterFire CLI)
 - Android Studio kèm Android Emulator
 
@@ -50,7 +70,25 @@ Sinh viên xem thực đơn, đặt món trước và theo dõi trạng thái ch
 
 ```bash
 cd backend
+dotnet tool restore      # cài dotnet-ef theo backend/dotnet-tools.json
 dotnet run --project src/CanteenApi --launch-profile http
+```
+
+Ở môi trường Development, backend **tự áp dụng migration** khi khởi động: database `SmartCanteenDb` được tạo nếu chưa có.
+
+Chuỗi kết nối mặc định nằm trong `appsettings.Development.json` (`Server=localhost`, Windows Authentication). Nếu máy bạn dùng instance khác, ví dụ SQL Express hoặc LocalDB, thì ghi đè bằng user-secrets:
+
+```bash
+cd backend/src/CanteenApi
+dotnet user-secrets set "ConnectionStrings:CanteenDb" "Server=.\SQLEXPRESS;Database=SmartCanteenDb;Trusted_Connection=True;TrustServerCertificate=True"
+# hoặc LocalDB: Server=(localdb)\MSSQLLocalDB;Database=SmartCanteenDb;Trusted_Connection=True
+```
+
+Khi sửa model, tạo migration mới:
+
+```bash
+cd backend
+dotnet ef migrations add <TenMigration> --project src/CanteenApi --output-dir Data/Migrations
 ```
 
 - Health check: http://localhost:5265/api/health
@@ -71,7 +109,7 @@ dotnet user-secrets set "Firebase:CredentialPath" "<đường-dẫn-ngoài-repo>
 
 | Method | Endpoint | Mô tả |
 |---|---|---|
-| POST | `/api/admin/seed` | Nạp danh mục và món ăn từ `SeedData/menu.json` lên Realtime Database |
+| POST | `/api/admin/seed` | Nạp danh mục và món ăn từ `SeedData/menu.json` vào SQL Server. Thêm `?reset=true` để xóa menu cũ và nạp lại |
 | POST | `/api/admin/staff?email=...` | Cấp quyền nhân viên căn-tin (custom claim `role=staff`) cho tài khoản đã đăng ký |
 
 ```bash
