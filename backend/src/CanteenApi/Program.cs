@@ -59,7 +59,11 @@ builder.Services.AddFirebase(builder.Configuration);
 // ---------- Dịch vụ dùng chung ----------
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddSingleton<IFileStorage, FileStorageService>();
+builder.Services.AddScoped<IPublicUrlBuilder, PublicUrlBuilder>();
 builder.Services.AddHttpClient();
+
+// ---------- Nghiệp vụ ----------
+builder.Services.AddScoped<UserService>();
 
 var app = builder.Build();
 
@@ -81,6 +85,17 @@ if (app.Environment.IsDevelopment())
 
 // Không dùng UseHttpsRedirection: emulator gọi http://10.0.2.2.
 app.UseStaticFiles(); // ảnh món ăn (wwwroot/images) và ảnh upload (wwwroot/uploads)
+
+// Ảnh không tồn tại → 404 rõ ràng (thay vì rơi xuống phân quyền mặc định và nhận 401).
+app.Use(async (context, next) =>
+{
+    if (context.Request.Path.StartsWithSegments("/uploads") || context.Request.Path.StartsWithSegments("/images"))
+    {
+        await Problems.WriteAsync(context, StatusCodes.Status404NotFound, ErrorCodes.NotFound, "Không tìm thấy file.");
+        return;
+    }
+    await next();
+});
 
 app.UseAuthentication();
 app.UseAuthorization();

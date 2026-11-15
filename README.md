@@ -200,6 +200,26 @@ curl -X POST http://localhost:5265/api/dev/accounts
 
 **Voucher mẫu:** `TANSV10` (giảm 10%, tối đa 15k, đơn từ 30k), `GIAM5K` (giảm 5k, đơn từ 40k), `COMTRUA20` (giảm 20%, tối đa 20k, đơn từ 60k).
 
+## Danh sách REST API
+
+Tài liệu đầy đủ (schema request/response, thử trực tiếp) có tại `/scalar` khi chạy ở môi trường Development.
+
+### Người dùng
+
+| Method | Endpoint | Quyền | Mô tả |
+|---|---|---|---|
+| GET | `/api/users/me` | Đã đăng nhập | Hồ sơ của tôi, đồng thời ghi nhận lần đăng nhập. Chưa có hồ sơ trả 404 `PROFILE_NOT_FOUND`, bị khóa trả 403 `ACCOUNT_LOCKED` |
+| POST | `/api/users/me` | Đã đăng nhập | Tạo hồ sơ sinh viên sau khi đăng ký Firebase. Email lấy từ token. Trả 201, hoặc 200 nếu đã có hồ sơ. Trùng MSSV trả 409 `STUDENT_CODE_TAKEN` |
+| PUT | `/api/users/me` | ActiveUser | Sửa họ tên, số điện thoại. MSSV chỉ được đặt khi đang trống, đổi MSSV đã có trả 422 `STUDENT_CODE_LOCKED` |
+| POST | `/api/users/me/avatar` | ActiveUser | Upload ảnh đại diện (multipart, field `file`, JPEG/PNG/WebP, tối đa 2 MB) |
+| DELETE | `/api/users/me/avatar` | ActiveUser | Gỡ ảnh đại diện |
+| GET | `/api/admin/users` | Admin | Danh sách người dùng: `search` (không dấu, theo tên, email hoặc MSSV), `role`, `isActive`, `page`, `pageSize` |
+| GET | `/api/admin/users/{id}` | Admin | Chi tiết người dùng kèm số đơn và tổng chi tiêu |
+| PATCH | `/api/admin/users/{id}/role` | Admin | `{ "role": "staff" }`, có hiệu lực ngay. Không tự đổi quyền của mình |
+| PATCH | `/api/admin/users/{id}/status` | Admin | `{ "isActive": false }` khóa cả đăng nhập Firebase, có hiệu lực ngay |
+
+**Validate:** họ tên 2–100 ký tự (tự bỏ khoảng trắng thừa), MSSV đúng 10 chữ số, số điện thoại `0xxxxxxxxx` hoặc `+84xxxxxxxxx`.
+
 ## Chạy mobile
 
 ```bash
