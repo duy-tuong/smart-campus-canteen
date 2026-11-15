@@ -1,0 +1,28 @@
+# ===== Secrets - TUYỆT ĐỐI không commit =====
+**/*serviceAccount*.json
+**/*service-account*.json
+**/*firebase-adminsdk*.json
+**/secrets/
+.env
+.env.*
+
+# ===== .NET =====
+**/bin/
+**/obj/
+.vs/
+*.user
+*.suo
+
+# ===== IDE / OS =====
+.idea/
+*.iml
+.DS_Store
+Thumbs.db
+
+# ===== Flutter (bổ sung, xem thêm mobile/.gitignore) =====
+mobile/build/
+mobile/.dart_tool/
+
+# ===== Firebase CLI =====
+firebase/.firebase/
+firebase/*.log
