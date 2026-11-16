@@ -5,6 +5,10 @@ import '../../screens/auth/forgot_password_screen.dart';
 import '../../screens/auth/register_screen.dart';
 import '../../screens/auth/server_settings_screen.dart';
 import '../../models/menu.dart';
+import '../../models/order.dart';
+import '../../screens/checkout/checkout_screen.dart';
+import '../../screens/checkout/order_placed_screen.dart';
+import '../../screens/checkout/payment_screen.dart';
 import '../../screens/menu/favorites_screen.dart';
 import '../../screens/menu/food_detail_screen.dart';
 import '../../screens/menu/search_screen.dart';
@@ -26,6 +30,13 @@ abstract final class AppRoutes {
 
   /// Chi tiết món — arguments: [FoodRouteArgs] (hoặc id món kiểu int).
   static const food = '/food';
+  static const checkout = '/checkout';
+
+  /// Thanh toán chuyển khoản (QR) — arguments: [OrderDetail] vừa tạo.
+  static const payment = '/payment';
+
+  /// Đặt món thành công — arguments: [OrderDetail].
+  static const orderPlaced = '/order-placed';
 
   static Map<String, WidgetBuilder> get routes => {
     home: (_) => const AuthGate(),
@@ -33,6 +44,7 @@ abstract final class AppRoutes {
     serverSettings: (_) => const ServerSettingsScreen(),
     search: (_) => const SearchScreen(),
     favorites: (_) => const FavoritesScreen(),
+    checkout: (_) => const CheckoutScreen(),
   };
 
   /// Route có tham số.
@@ -48,6 +60,14 @@ abstract final class AppRoutes {
         int id => FoodDetailScreen(foodId: id),
         _ => throw ArgumentError('Route ${settings.name} cần id món'),
       },
+    ),
+    payment => MaterialPageRoute(
+      settings: settings,
+      builder: (_) => PaymentScreen(order: settings.arguments! as OrderDetail),
+    ),
+    orderPlaced => MaterialPageRoute(
+      settings: settings,
+      builder: (_) => OrderPlacedScreen(order: settings.arguments! as OrderDetail),
     ),
     _ => null,
   };

@@ -6,6 +6,7 @@ import '../../core/responsive/responsive_shell.dart';
 import '../../providers/cart_provider.dart';
 import '../../providers/home_tabs.dart';
 import '../../widgets/state_views.dart';
+import '../cart/cart_screen.dart';
 import '../menu/menu_screen.dart';
 import '../profile/account_screen.dart';
 
@@ -64,11 +65,7 @@ class _HomeShellState extends State<HomeShell> {
       railLeading: Icon(Icons.lunch_dining_rounded, color: Theme.of(context).colorScheme.primary, size: 32),
       pages: const [
         MenuScreen(),
-        _ComingSoon(
-          title: 'Giỏ hàng',
-          icon: Icons.shopping_bag_rounded,
-          message: 'Giỏ hàng lưu trên máy, đặt món và thanh toán.',
-        ),
+        CartScreen(),
         _ComingSoon(
           title: 'Đơn hàng',
           icon: Icons.receipt_long_rounded,

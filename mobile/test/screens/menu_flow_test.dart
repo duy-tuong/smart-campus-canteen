@@ -94,6 +94,12 @@ void main() {
     expect(find.descendant(of: find.byType(NavigationBar), matching: find.text('1')), findsOneWidget);
     expect(find.descendant(of: cardOf('Món số 4'), matching: find.text('Trong giỏ: 1')), findsOneWidget);
 
+    // SnackBar có nút hành động vẫn phải TỰ ẨN (không che nút Thanh toán của giỏ hàng).
+    await tester.pump(const Duration(seconds: 4));
+    await tester.pumpAndSettle();
+    expect(find.text('Đã thêm Món số 4 vào giỏ'), findsNothing);
+
+    await tap(tester, find.descendant(of: cardOf('Món số 4'), matching: find.byTooltip('Thêm vào giỏ')));
     await tap(tester, find.text('Xem giỏ'));
     // MenuScreen giờ nằm ở tab ẩn (IndexedStack) → tìm cả widget offstage.
     final tabs = Provider.of<HomeTabs>(tester.element(find.byType(MenuScreen, skipOffstage: false)), listen: false);

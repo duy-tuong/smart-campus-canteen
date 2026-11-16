@@ -19,6 +19,7 @@ class AppHarness {
   late FakeAuthService auth;
   final cartDao = MemoryCartDao();
   final searchHistory = MemorySearchHistoryDao();
+  final orderDao = MemoryOrderDao();
 
   static const student = AuthUser(uid: 'uid-sv01', email: 'sv01@smartcanteen.vn');
 
@@ -61,6 +62,7 @@ class AppHarness {
           api: backend.client(auth: auth),
           auth: auth,
           cartDao: cartDao,
+          orderDao: orderDao,
           searchHistoryDao: searchHistory,
         ),
         child: const CanteenApp(),

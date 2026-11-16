@@ -275,6 +275,7 @@ Tài liệu đầy đủ (schema request/response, thử trực tiếp) có tạ
 
 | Method | Endpoint | Quyền | Mô tả |
 |---|---|---|---|
+| GET | `/api/canteen/info` | Công khai | Giờ mở cửa (`openTime`, `closeTime`, `isOpen`), `serverTime` (UTC), `minPickupLeadMinutes`, `unpaidTransferTimeoutMinutes`, `maxActiveOrdersPerUser`, `maxLinesPerOrder`, `bankTransferEnabled`. App dùng để dựng khung giờ hẹn lấy món theo đồng hồ máy chủ và ẩn chuyển khoản khi payOS tắt |
 | POST | `/api/orders/quote` | ActiveUser | Báo giá giỏ hàng cho màn Thanh toán, **không tạo đơn**. Giá lấy từ database, client chỉ gửi `foodId`, `quantity`, `optionIds`, `note`. Trả các dòng đã tính giá, `errors` theo từng dòng, kết quả voucher, `canOrder` |
 | GET | `/api/vouchers/available` | ActiveUser | Voucher tôi đang dùng được, kèm `remainingForMe` |
 | GET | `/api/admin/vouchers` | Staff/Admin | Danh sách voucher (`q`, `isActive`, phân trang) kèm `usedCount`, `orderCount` |
@@ -489,7 +490,7 @@ cd backend
 dotnet test
 ```
 
-Bộ test nằm trong `backend/tests/CanteenApi.Tests` (xUnit), gồm **203 test, chạy khoảng 27 giây**. Test chạy **toàn bộ backend thật trong bộ nhớ** (`WebApplicationFactory`): routing, phân quyền, validate, EF Core và SQL Server thật. Chỉ một số phần được thay thế:
+Bộ test nằm trong `backend/tests/CanteenApi.Tests` (xUnit), gồm **209 test, chạy khoảng 27 giây**. Test chạy **toàn bộ backend thật trong bộ nhớ** (`WebApplicationFactory`): routing, phân quyền, validate, EF Core và SQL Server thật. Chỉ một số phần được thay thế:
 
 | Thành phần | Trong test |
 |---|---|

@@ -7,6 +7,7 @@ import 'data/local/order_dao.dart';
 import 'data/local/search_history_dao.dart';
 import 'data/remote/api_client.dart';
 import 'data/remote/menu_api.dart';
+import 'data/remote/order_api.dart';
 import 'data/remote/user_api.dart';
 import 'providers/auth_provider.dart';
 import 'providers/cart_provider.dart';
@@ -23,7 +24,7 @@ List<SingleChildWidget> buildAppProviders({
   required ApiClient api,
   required AuthService auth,
   required CartDao cartDao,
-  OrderDao? orderDao,
+  required OrderDao orderDao,
   SearchHistoryDao? searchHistoryDao,
 }) {
   final userApi = UserApi(api);
@@ -39,7 +40,8 @@ List<SingleChildWidget> buildAppProviders({
     Provider.value(value: userApi),
     Provider.value(value: menuApi),
     Provider.value(value: cartDao),
-    if (orderDao != null) Provider.value(value: orderDao),
+    Provider.value(value: orderDao),
+    Provider.value(value: OrderApi(api)),
     if (searchHistoryDao != null) Provider.value(value: searchHistoryDao),
     ChangeNotifierProvider(
       create: (_) => AuthProvider(auth: auth, users: userApi, api: api),

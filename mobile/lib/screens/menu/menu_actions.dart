@@ -45,6 +45,9 @@ void showAddedToCart(BuildContext context, ScaffoldMessengerState messenger, Str
       SnackBar(
         content: Text('Đã thêm ${quantity > 1 ? '$quantity × ' : ''}$foodName vào giỏ'),
         duration: const Duration(seconds: 3),
+        // Flutter mặc định GIỮ SnackBar có nút hành động cho tới khi người dùng đóng (persist = true)
+        // → nó che mất nút "Thanh toán". Cho tự ẩn sau [duration].
+        persist: false,
         action: SnackBarAction(
           label: 'Xem giỏ',
           onPressed: () {

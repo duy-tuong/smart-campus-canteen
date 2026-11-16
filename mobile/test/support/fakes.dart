@@ -6,6 +6,8 @@ import 'package:campus_canteen/data/remote/api_client.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 
+import 'fake_orders.dart';
+
 /// Firebase Auth giả: giữ người dùng trong bộ nhớ, phát sự kiện như authStateChanges() thật.
 class FakeAuthService implements AuthService {
   FakeAuthService({AuthUser? signedIn, this.password = 'Canteen@123'}) : _user = signedIn;
@@ -97,7 +99,7 @@ http.Response problem(int status, String code, String detail, {Map<String, List<
     jsonResponse({'status': status, 'title': detail, 'detail': detail, 'code': code, 'errors': ?errors}, status);
 
 /// Backend giả cho /api/users/me: hồ sơ lưu theo uid (lấy từ token dạng `token-{uid}`).
-class FakeBackend {
+class FakeBackend with FakeOrdering {
   final Map<String, Map<String, Object?>> profiles = {};
   final Set<String> locked = {};
 
@@ -146,6 +148,8 @@ class FakeBackend {
       profiles[token] = profile;
       return jsonResponse(profile, 201);
     }
+    final orderResponse = handleOrdering(request, token);
+    if (orderResponse != null) return orderResponse;
     final menuResponse = _menu(request);
     if (menuResponse != null) return menuResponse;
     return problem(404, 'NOT_FOUND', 'Không tìm thấy.');
@@ -166,6 +170,7 @@ class FakeBackend {
 
   /// 25 món (2 trang khi pageSize = 20): #1 Cơm gà (tùy chọn không bắt buộc), #2 Trà sữa (Size bắt buộc),
   /// #3 Bánh flan (hết món), còn lại "Món số N".
+  @override
   late final List<Map<String, Object?>> foods = [
     foodJson(1, 'Cơm gà xối mỡ', 35000, categoryId: 1, hasOptions: true, remaining: 8),
     foodJson(2, 'Trà sữa trân châu', 25000, categoryId: 3, hasOptions: true, rating: 4.5, ratingCount: 2),
@@ -207,6 +212,9 @@ class FakeBackend {
     'isAvailable': available,
     'sortOrder': id,
   };
+
+  @override
+  List<Map<String, Object?>> groupsOf(int foodId) => _groupsOf(foodId);
 
   List<Map<String, Object?>> _groupsOf(int foodId) => switch (foodId) {
     1 => [
