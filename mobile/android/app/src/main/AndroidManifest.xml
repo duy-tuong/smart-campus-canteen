@@ -1,8 +1,13 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Gọi REST API backend và Firebase. Bản debug tự có quyền này, bản release (APK demo) phải khai báo. -->
+    <uses-permission android:name="android.permission.INTERNET" />
+
+    <!-- usesCleartextTraffic: backend chạy local qua HTTP (10.0.2.2 trên máy ảo, IP laptop trong mạng Wi-Fi khi demo). -->
     <application
         android:label="Smart Canteen"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher">
+        android:icon="@mipmap/ic_launcher"
+        android:usesCleartextTraffic="true">
         <activity
             android:name=".MainActivity"
             android:exported="true"

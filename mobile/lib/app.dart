@@ -1,38 +1,43 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:provider/provider.dart';
 
+import 'core/routes/app_routes.dart';
 import 'core/theme/app_theme.dart';
-import 'screens/home/home_screen.dart';
+import 'providers/settings_provider.dart';
 
-/// Widget gốc của ứng dụng: cấu hình MaterialApp, theme Sáng/Tối và điều hướng.
-///
-/// Hiện tại giữ trạng thái theme bằng StatefulWidget; sẽ chuyển sang
-/// ThemeProvider + AuthGate (authStateChanges) khi tích hợp Provider/Firebase.
-class CanteenApp extends StatefulWidget {
-  const CanteenApp({super.key});
+/// Widget gốc: MaterialApp với theme Sáng/Tối (theo [SettingsProvider]), tiếng Việt và điều hướng có tên.
+/// Các provider (Settings, ApiClient, DAO...) được cung cấp từ main.dart.
+class CanteenApp extends StatelessWidget {
+  const CanteenApp({super.key, this.initialRoute = AppRoutes.home});
 
-  @override
-  State<CanteenApp> createState() => _CanteenAppState();
-}
-
-class _CanteenAppState extends State<CanteenApp> {
-  ThemeMode _themeMode = ThemeMode.light;
-
-  void _toggleTheme() {
-    setState(() {
-      _themeMode =
-          _themeMode == ThemeMode.dark ? ThemeMode.light : ThemeMode.dark;
-    });
-  }
+  final String initialRoute;
 
   @override
   Widget build(BuildContext context) {
+    final themeMode = context.select<SettingsProvider, ThemeMode>((s) => s.themeMode);
+
     return MaterialApp(
       title: 'Smart Canteen',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
       darkTheme: AppTheme.dark,
-      themeMode: _themeMode,
-      home: HomeScreen(onToggleTheme: _toggleTheme),
+      themeMode: themeMode,
+      locale: const Locale('vi'),
+      supportedLocales: const [Locale('vi'), Locale('en')],
+      localizationsDelegates: GlobalMaterialLocalizations.delegates,
+      initialRoute: initialRoute,
+      routes: AppRoutes.routes,
+      onGenerateRoute: AppRoutes.onGenerateRoute,
+      onUnknownRoute: AppRoutes.onUnknownRoute,
+      // Giới hạn cỡ chữ hệ thống quá lớn để bố cục không vỡ (vẫn tôn trọng tùy chỉnh trợ năng tới 1.3×).
+      builder: (context, child) {
+        final media = MediaQuery.of(context);
+        return MediaQuery(
+          data: media.copyWith(textScaler: media.textScaler.clamp(minScaleFactor: 0.9, maxScaleFactor: 1.3)),
+          child: child!,
+        );
+      },
     );
   }
 }
