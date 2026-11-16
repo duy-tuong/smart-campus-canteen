@@ -12,9 +12,11 @@ import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/theme/app_tokens.dart';
 import '../../core/utils/money.dart';
+import '../../data/firebase/realtime_service.dart';
 import '../../data/local/order_dao.dart';
 import '../../data/remote/order_api.dart';
 import '../../models/enums.dart';
+import '../../models/live.dart';
 import '../../models/order.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/home_tabs.dart';
@@ -22,10 +24,10 @@ import '../../widgets/state_views.dart';
 
 /// Thanh toán chuyển khoản: QR VietQR (qr_flutter) + thông tin chuyển tay có nút sao chép + đếm ngược.
 ///
-/// Tự kiểm tra trạng thái mỗi 5 giây (GET /api/orders/{id}); có tiền → chuyển sang màn thành công.
-/// (Phần F5 sẽ nghe Realtime Database thay cho việc hỏi định kỳ.)
+/// Nghe Firebase `orders/{id}` (RealtimeService.watchOrder): ngân hàng báo có tiền → backend cập nhật →
+/// màn hình chuyển sang "thành công" NGAY. Dự phòng: tự hỏi máy chủ mỗi [pollInterval] nếu Firebase chậm.
 class PaymentScreen extends StatefulWidget {
-  const PaymentScreen({super.key, required this.order, this.pollInterval = const Duration(seconds: 5)});
+  const PaymentScreen({super.key, required this.order, this.pollInterval = const Duration(seconds: 15)});
 
   final OrderDetail order;
   final Duration pollInterval;
@@ -39,6 +41,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
   late final OrderApi _api = context.read<OrderApi>();
   Timer? _ticker;
   Timer? _poller;
+  StreamSubscription<OrderLive?>? _liveSub;
   Duration _remaining = Duration.zero;
   bool _syncing = false;
   bool _done = false;
@@ -51,12 +54,18 @@ class _PaymentScreenState extends State<PaymentScreen> {
     _tick();
     _ticker = Timer.periodic(const Duration(seconds: 1), (_) => _tick());
     _poller = Timer.periodic(widget.pollInterval, (_) => _refresh(silent: true));
+    _liveSub = context.read<RealtimeService>().watchOrder(widget.order.id).listen((live) {
+      if (live == null) return;
+      // Có tiền hoặc đơn bị hủy → tải chi tiết đầy đủ rồi chuyển màn / hiện trạng thái hủy.
+      if (live.paymentStatus == PaymentStatus.paid || live.status == OrderStatus.cancelled) _refresh(silent: true);
+    }, onError: (_) {});
   }
 
   @override
   void dispose() {
     _ticker?.cancel();
     _poller?.cancel();
+    _liveSub?.cancel();
     super.dispose();
   }
 
@@ -100,6 +109,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
   void _stopTimers() {
     _ticker?.cancel();
     _poller?.cancel();
+    _liveSub?.cancel();
   }
 
   Future<void> _finish(OrderDetail order) async {

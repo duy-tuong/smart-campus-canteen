@@ -7,6 +7,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'fake_realtime.dart';
 import 'fakes.dart';
 import 'memory_daos.dart';
 
@@ -20,6 +21,7 @@ class AppHarness {
   final cartDao = MemoryCartDao();
   final searchHistory = MemorySearchHistoryDao();
   final orderDao = MemoryOrderDao();
+  final realtime = FakeRealtimeService();
 
   static const student = AuthUser(uid: 'uid-sv01', email: 'sv01@smartcanteen.vn');
 
@@ -61,6 +63,7 @@ class AppHarness {
           settings: settings,
           api: backend.client(auth: auth),
           auth: auth,
+          realtime: realtime,
           cartDao: cartDao,
           orderDao: orderDao,
           searchHistoryDao: searchHistory,

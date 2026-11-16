@@ -2,6 +2,7 @@ import '../../models/cart_item.dart';
 import '../../models/checkout.dart';
 import '../../models/enums.dart';
 import '../../models/order.dart';
+import '../../models/paged_result.dart';
 import 'api_client.dart';
 
 /// REST: báo giá, đặt món, thanh toán, voucher, thông tin căn-tin.
@@ -57,6 +58,19 @@ class OrderApi {
   /// "Tôi đã chuyển khoản": máy chủ hỏi payOS ngay, trả về đơn sau khi đồng bộ.
   Future<OrderDetail> syncPayment(String id) async =>
       OrderDetail.fromJson(await _api.post('/api/orders/$id/payment/sync') as Map<String, dynamic>);
+
+  /// Đơn của tôi: [status] = 'active' | 'completed' | 'cancelled' (null = tất cả), mới nhất trước.
+  Future<PagedResult<OrderSummary>> myOrders({String? status, int page = 1, int pageSize = 20}) async =>
+      PagedResult.fromJson(
+        await _api.get('/api/orders/me', query: {'status': status, 'page': page, 'pageSize': pageSize})
+            as Map<String, dynamic>,
+        OrderSummary.fromJson,
+      );
+
+  /// Hủy đơn (sinh viên: chỉ khi "Đã nhận"). [reason] dài 5–300 ký tự.
+  Future<OrderDetail> cancel(String id, String reason) async => OrderDetail.fromJson(
+    await _api.post('/api/orders/$id/cancel', body: {'reason': reason.trim()}) as Map<String, dynamic>,
+  );
 
   static String? _blankToNull(String? value) => (value == null || value.trim().isEmpty) ? null : value.trim();
 }

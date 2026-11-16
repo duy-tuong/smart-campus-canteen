@@ -24,6 +24,65 @@ mixin FakeOrdering {
   /// Đơn chuyển khoản trong tập này được coi là đã trả tiền khi app hỏi lại.
   final Set<String> paidOrderIds = {};
 
+  final Set<int> readNotificationIds = {};
+  int readAllCalls = 0;
+
+  /// Nhân viên căn-tin đổi trạng thái đơn (ghi thêm một bước vào dòng thời gian).
+  void setStatus(String id, String status, {String? cancelReason, String at = '2026-11-16T03:10:00Z'}) {
+    final order = orders[id]!;
+    (order['history']! as List).add({
+      'fromStatus': order['status'],
+      'toStatus': status,
+      'changedByName': 'Căn-tin',
+      'changedAt': at,
+    });
+    order['status'] = status;
+    order['canCancel'] = status == 'received';
+    if (cancelReason != null) order['cancelReason'] = cancelReason;
+  }
+
+  /// Thêm sẵn một đơn (như đã đặt từ trước) để thử màn lịch sử / theo dõi.
+  Map<String, Object?> seedOrder({
+    String status = 'received',
+    String paymentMethod = 'cash',
+    String createdAt = '2026-11-16T03:00:00Z',
+    int foodId = 1,
+    int quantity = 1,
+  }) {
+    final body = <String, dynamic>{
+      'items': [
+        {'foodId': foodId, 'quantity': quantity, 'optionIds': <int>[], 'note': null},
+      ],
+      'paymentMethod': paymentMethod,
+      'voucherCode': null,
+      'pickupTime': null,
+      'note': null,
+    };
+    final id = 'order-${orders.length + 1}';
+    final order = _orderJson(id, 'uid-sv01', body, quoteFor(body))
+      ..['createdAt'] = createdAt
+      ..['status'] = status
+      ..['canCancel'] = status == 'received';
+    orders[id] = order;
+    return order;
+  }
+
+  static Map<String, Object?> _summary(Map<String, Object?> o) => {
+    'id': o['id'],
+    'pickupCode': o['pickupCode'],
+    'status': o['status'],
+    'paymentMethod': o['paymentMethod'],
+    'paymentStatus': o['paymentStatus'],
+    'totalAmount': o['totalAmount'],
+    'totalItems': o['totalItems'],
+    'itemsPreview': [
+      for (final i in (o['items']! as List).cast<Map<String, Object?>>()) '${i['foodName']} ×${i['quantity']}',
+    ].join(', '),
+    'customerName': 'Nguyễn Văn An',
+    'createdAt': o['createdAt'],
+    'pickupTime': o['pickupTime'],
+  };
+
   static const vouchers = [
     {
       'code': 'GIAM10',
@@ -173,7 +232,7 @@ mixin FakeOrdering {
             'options': l['options'],
           },
       ],
-      'history': [
+      'history': <Map<String, Object?>>[
         {'fromStatus': null, 'toStatus': 'received', 'changedByName': 'An', 'changedAt': '2026-11-16T03:00:00Z'},
       ],
       'payment': {
@@ -241,6 +300,50 @@ mixin FakeOrdering {
         throw http.ClientException('Mất kết nối giữa chừng');
       }
       return jsonResponse(order, 201);
+    }
+
+    if (path == '/api/orders/me') {
+      final status = request.url.queryParameters['status'];
+      final group = switch (status) {
+        'active' => const {'received', 'cooking', 'ready'},
+        'completed' => const {'completed'},
+        'cancelled' => const {'cancelled'},
+        _ => null,
+      };
+      final list = orders.values.where((o) => group == null || group.contains(o['status'])).map(_summary).toList()
+        ..sort((a, b) => (b['createdAt'] as String).compareTo(a['createdAt'] as String));
+      final page = int.tryParse(request.url.queryParameters['page'] ?? '') ?? 1;
+      final size = int.tryParse(request.url.queryParameters['pageSize'] ?? '') ?? 20;
+      return jsonResponse({
+        'items': list.skip((page - 1) * size).take(size).toList(),
+        'page': page,
+        'pageSize': size,
+        'totalCount': list.length,
+        'totalPages': (list.length / size).ceil(),
+        'hasNext': page * size < list.length,
+      }, 200);
+    }
+
+    if (path == '/api/notifications/read-all') {
+      readAllCalls++;
+      return jsonResponse({'updated': 1}, 200);
+    }
+    final readMatch = RegExp(r'^/api/notifications/(\d+)/read$').firstMatch(path);
+    if (readMatch != null) {
+      readNotificationIds.add(int.parse(readMatch.group(1)!));
+      return http.Response('', 204);
+    }
+
+    final cancel = RegExp(r'^/api/orders/([^/]+)/cancel$').firstMatch(path);
+    if (cancel != null) {
+      final order = orders[cancel.group(1)];
+      if (order == null) return problem(404, 'NOT_FOUND', 'Không tìm thấy đơn.');
+      if (order['status'] != 'received') {
+        return problem(422, 'ORDER_NOT_CANCELLABLE', 'Căn-tin đã bắt đầu nấu — không thể hủy đơn.');
+      }
+      final reason = (jsonDecode(request.body) as Map<String, dynamic>)['reason'];
+      setStatus(order['id']! as String, 'cancelled', cancelReason: reason as String?);
+      return jsonResponse(order, 200);
     }
 
     final match = RegExp(r'^/api/orders/([^/]+)(/payment/sync)?$').firstMatch(path);

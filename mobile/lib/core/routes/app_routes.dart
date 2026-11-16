@@ -12,6 +12,7 @@ import '../../screens/checkout/payment_screen.dart';
 import '../../screens/menu/favorites_screen.dart';
 import '../../screens/menu/food_detail_screen.dart';
 import '../../screens/menu/search_screen.dart';
+import '../../screens/orders/order_screen.dart';
 import '../../widgets/state_views.dart';
 
 /// Tên route và bảng điều hướng của app.
@@ -37,6 +38,9 @@ abstract final class AppRoutes {
 
   /// Đặt món thành công — arguments: [OrderDetail].
   static const orderPlaced = '/order-placed';
+
+  /// Theo dõi / chi tiết đơn — arguments: id đơn (String).
+  static const order = '/order';
 
   static Map<String, WidgetBuilder> get routes => {
     home: (_) => const AuthGate(),
@@ -64,6 +68,10 @@ abstract final class AppRoutes {
     payment => MaterialPageRoute(
       settings: settings,
       builder: (_) => PaymentScreen(order: settings.arguments! as OrderDetail),
+    ),
+    order => MaterialPageRoute(
+      settings: settings,
+      builder: (_) => OrderScreen(orderId: settings.arguments! as String),
     ),
     orderPlaced => MaterialPageRoute(
       settings: settings,

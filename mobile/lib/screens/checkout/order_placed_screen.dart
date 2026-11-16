@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../core/responsive/breakpoints.dart';
+import '../../core/routes/app_routes.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/theme/app_tokens.dart';
@@ -134,7 +135,16 @@ class _OrderPlacedScreenState extends State<OrderPlacedScreen> with SingleTicker
                   ),
                   const SizedBox(height: AppSpacing.xl),
                   FilledButton.icon(
-                    onPressed: () => _goTo(HomeTabs.orders),
+                    onPressed: () {
+                      // Tab Đơn hàng ở dưới, màn Theo dõi đơn mở ngay phía trên.
+                      context.read<HomeTabs>().select(HomeTabs.orders);
+                      Navigator.pushNamedAndRemoveUntil(
+                        context,
+                        AppRoutes.order,
+                        (r) => r.isFirst,
+                        arguments: widget.order.id,
+                      );
+                    },
                     icon: const Icon(Icons.track_changes_rounded),
                     label: const Text('Theo dõi đơn'),
                   ),

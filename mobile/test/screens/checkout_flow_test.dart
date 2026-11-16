@@ -124,7 +124,7 @@ void main() {
         },
       ]);
       expect(app.cartDao.rows, isEmpty);
-      expect(app.orderDao.saved.keys, ['order-1']);
+      expect(app.orderDao.rows.keys, ['order-1']);
 
       await tap(tester, find.text('Tiếp tục xem thực đơn'));
       expect(find.byType(MenuScreen), findsOneWidget);
@@ -229,7 +229,7 @@ void main() {
       await tap(tester, find.text('Tôi đã chuyển khoản'));
       expect(find.byType(OrderPlacedScreen), findsOneWidget);
       expect(find.text('Đã thanh toán'), findsOneWidget);
-      expect(app.orderDao.saved['order-1']!.$1.paymentStatus.name, 'paid', reason: 'cập nhật hóa đơn trên máy');
+      expect(app.orderDao.rows['order-1']!.paymentStatus.name, 'paid', reason: 'cập nhật hóa đơn trên máy');
       await settleSnackBars(tester);
     });
   });

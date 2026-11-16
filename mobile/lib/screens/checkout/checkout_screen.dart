@@ -16,6 +16,7 @@ import '../../models/checkout.dart';
 import '../../models/enums.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/cart_provider.dart';
+import '../../providers/orders_provider.dart';
 import '../../widgets/common.dart';
 import '../../widgets/state_views.dart';
 import 'idempotency.dart';
@@ -115,6 +116,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   Future<void> _placeOrder() async {
     final cart = context.read<CartProvider>();
     final orderDao = context.read<OrderDao>();
+    final orders = context.read<OrdersProvider>();
     final userId = context.read<AuthProvider>().user!.uid;
     final navigator = Navigator.of(context);
     setState(() {
@@ -134,6 +136,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       // Lưu hóa đơn vào SQLite (xem lại khi offline), rồi dọn giỏ.
       await orderDao.upsertDetail(order, userId);
       await cart.clear();
+      await orders.reloadLocal();
       if (!mounted) return;
       final awaitingTransfer = order.payment?.awaitingTransfer ?? false;
       navigator.pushReplacementNamed(awaitingTransfer ? AppRoutes.payment : AppRoutes.orderPlaced, arguments: order);
