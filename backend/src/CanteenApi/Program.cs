@@ -91,6 +91,7 @@ builder.Services.AddScoped<OrderLifecycleService>();
 builder.Services.AddScoped<PaymentService>();
 builder.Services.AddScoped<NotificationService>();
 builder.Services.AddScoped<CanteenApi.Services.Reviews.ReviewService>();
+builder.Services.AddScoped<CanteenApi.Services.Statistics.StatisticsService>();
 
 // ---------- Đồng bộ realtime lên Firebase (hàng đợi trong bộ nhớ + worker ghi nền) ----------
 builder.Services.AddSingleton<RealtimeQueue>();

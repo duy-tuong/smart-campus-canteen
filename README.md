@@ -424,6 +424,30 @@ SQL Server là nguồn dữ liệu chính. Firebase chỉ giữ **bản sao đ�
 - Chỉ tính đánh giá không bị ẩn, làm tròn 2 chữ số.
 - Vì tính lại từ đầu chứ không cộng trừ dần, nhiều người đánh giá cùng lúc vẫn ra số đúng (có test 10 đánh giá song song).
 
+### Thống kê doanh thu (Staff/Admin)
+
+Tham số chung: `from`, `to` (ngày theo giờ Việt Nam, `yyyy-MM-dd`). Bỏ trống thì lấy **hôm nay**. Khoảng tối đa 366 ngày. `from > to` hoặc quá dài trả 400.
+
+| Method | Endpoint | Trả về |
+|---|---|---|
+| GET | `/api/stats/overview` | `revenue`, `completedOrders`, `cancelledOrders`, `cancelRate` (%), `averageOrderValue`, `itemsSold`, `discountTotal`, `uniqueCustomers`, `byPaymentMethod`, `refunds` (đơn đã trả tiền nhưng bị hủy, cần hoàn), `previous` (kỳ trước cùng độ dài, kèm `revenueChangePercent`) |
+| GET | `/api/stats/revenue?groupBy=day\|week\|month` | Chuỗi `{ period, label, revenue, orders }`. Kỳ không có đơn có giá trị **0**, nên biểu đồ không bị đứt. Tuần bắt đầu thứ Hai |
+| GET | `/api/stats/top-foods?limit=10&sortBy=quantity\|revenue` | Món bán chạy, kèm danh mục và điểm sao. Món đã xóa mềm vẫn được tính |
+| GET | `/api/stats/hourly` | 24 cột `{ hour, orders, revenue }` theo **giờ Việt Nam**, dùng cho biểu đồ giờ cao điểm |
+| GET | `/api/stats/categories` | Tỷ trọng doanh thu theo danh mục. `percent` làm tròn 0,1% theo phương pháp phần dư lớn nhất, nên tổng **luôn đúng 100** |
+
+**Định nghĩa số liệu** (dùng cho báo cáo):
+
+| Số liệu | Cách tính |
+|---|---|
+| Doanh thu | Tổng `TotalAmount` (**sau** giảm giá) của đơn **đã hoàn thành**. Đơn đang xử lý, đã hủy hoặc hoàn tiền không tính |
+| Ngày | Ngày theo giờ Việt Nam (`Orders.PickupDate`). Đơn lúc 06:45 sáng 16/11 thuộc ngày 16/11, dù theo giờ UTC là 23:45 ngày 15/11 |
+| Giờ trong ngày | Giờ Việt Nam lúc đặt (UTC + 7, Việt Nam không có giờ mùa hè) |
+| Tỷ lệ hủy | Đơn hủy / (đơn hoàn thành + đơn hủy) |
+| Doanh thu theo món / danh mục | Tổng `LineTotal`, là doanh thu **gộp trước** giảm giá theo đơn. Vì vậy tổng có thể lớn hơn doanh thu ở `overview` một khoản bằng `discountTotal` |
+
+Mọi phép gom nhóm chạy trên SQL Server. Riêng gom theo tuần hoặc tháng được tính trong bộ nhớ từ chuỗi ngày (tối đa 366 điểm).
+
 ### Cấu hình vận hành căn-tin (`appsettings.json`)
 
 | Khóa | Mặc định | Ý nghĩa |
@@ -452,7 +476,7 @@ cd backend
 dotnet test
 ```
 
-Bộ test nằm trong `backend/tests/CanteenApi.Tests` (xUnit), gồm **180 test, chạy khoảng 13 giây**. Test chạy **toàn bộ backend thật trong bộ nhớ** (`WebApplicationFactory`): routing, phân quyền, validate, EF Core và SQL Server thật. Chỉ một số phần được thay thế:
+Bộ test nằm trong `backend/tests/CanteenApi.Tests` (xUnit), gồm **198 test, chạy khoảng 17 giây**. Test chạy **toàn bộ backend thật trong bộ nhớ** (`WebApplicationFactory`): routing, phân quyền, validate, EF Core và SQL Server thật. Chỉ một số phần được thay thế:
 
 | Thành phần | Trong test |
 |---|---|
@@ -476,6 +500,7 @@ Không cần file service account và không cần Internet.
 | `Api/AdminUsersTests` | Phân trang, tìm không dấu, lọc, đổi vai trò và khóa tài khoản đồng bộ sang Firebase, không tự sửa chính mình |
 | `Api/CategoriesTests` | Hiển thị theo vai trò, trùng tên không dấu, sắp xếp, xóa mềm, tạo lại tên đã xóa |
 | `Api/ReviewTests` | Quyền đánh giá (đơn hoàn thành, chủ đơn, món trong đơn), trùng, hạn 7 ngày (tua đồng hồ), điểm trung bình sau tạo/sửa/xóa/ẩn (ví dụ 5, 4, 3 cho 4,00; sửa thành 5, 4, 4 cho 4,33), 10 đánh giá song song, ẩn tên công khai, phân bố sao, trả lời kèm thông báo |
+| `Api/StatisticsTests` | Doanh thu, tỷ lệ hủy, giá trị đơn trung bình, so sánh kỳ trước (+195%), ngày trống có giá trị 0, gom tuần (thứ Hai) và tháng, món bán chạy, **đơn 06:45 sáng VN nằm ở cột 6 giờ chứ không phải 23 giờ UTC**, tỷ trọng danh mục tổng 100%, tham số sai, phân quyền |
 | `Api/FoodsTests` | Tìm/lọc/sắp xếp. **Số suất còn lại tính theo giờ Việt Nam qua nửa đêm**, bỏ đơn hủy, sang ngày mới tính lại. Bán chạy 30 ngày. Chống ghi đè khi sửa đồng thời. Tùy chọn. Xóa mềm giữ lịch sử đơn. Yêu thích theo từng người |
 
 ## Chạy mobile
