@@ -126,8 +126,9 @@ class ApiClient {
       if (value == null) return;
       params[key] = value is Iterable ? value.map((v) => '$v').toList() : '$value';
     });
-    return Uri.parse('${AppConfig.normalizeBaseUrl(_baseUrl())}$path')
-        .replace(queryParameters: params.isEmpty ? null : params);
+    return Uri.parse(
+      '${AppConfig.normalizeBaseUrl(_baseUrl())}$path',
+    ).replace(queryParameters: params.isEmpty ? null : params);
   }
 
   Future<Map<String, String>> _headers({required bool json}) async {

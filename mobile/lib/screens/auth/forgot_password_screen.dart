@@ -59,24 +59,27 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             ? _SentView(key: const ValueKey('sent'), email: sentTo, onResend: () => setState(() => _sentTo = null))
             : Form(
                 key: _formKey,
-                child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-                  FormErrorBanner(_failure?.field == null ? _failure?.message : null),
-                  TextFormField(
-                    controller: _email,
-                    keyboardType: TextInputType.emailAddress,
-                    autocorrect: false,
-                    textInputAction: TextInputAction.send,
-                    onFieldSubmitted: (_) => _submit(),
-                    validator: Validators.email,
-                    decoration: InputDecoration(
-                      labelText: 'Email',
-                      prefixIcon: const Icon(Icons.mail_outline_rounded),
-                      errorText: _failure?.field == 'email' ? _failure!.message : null,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    FormErrorBanner(_failure?.field == null ? _failure?.message : null),
+                    TextFormField(
+                      controller: _email,
+                      keyboardType: TextInputType.emailAddress,
+                      autocorrect: false,
+                      textInputAction: TextInputAction.send,
+                      onFieldSubmitted: (_) => _submit(),
+                      validator: Validators.email,
+                      decoration: InputDecoration(
+                        labelText: 'Email',
+                        prefixIcon: const Icon(Icons.mail_outline_rounded),
+                        errorText: _failure?.field == 'email' ? _failure!.message : null,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: AppSpacing.lg),
-                  BusyButton(label: 'Gửi liên kết', busy: _busy, onPressed: _submit),
-                ]),
+                    const SizedBox(height: AppSpacing.lg),
+                    BusyButton(label: 'Gửi liên kết', busy: _busy, onPressed: _submit),
+                  ],
+                ),
               ),
       ),
     );
@@ -93,26 +96,45 @@ class _SentView extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final success = context.appColors.success;
-    return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-      Container(
-        padding: const EdgeInsets.all(AppSpacing.md),
-        decoration: BoxDecoration(color: success.withValues(alpha: 0.10), borderRadius: AppRadius.lgAll),
-        child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Icon(Icons.mark_email_read_rounded, color: success),
-          const SizedBox(width: AppSpacing.sm),
-          Expanded(
-            child: Text.rich(TextSpan(children: [
-              const TextSpan(text: 'Nếu email '),
-              TextSpan(text: email, style: const TextStyle(fontWeight: FontWeight.w600)),
-              const TextSpan(text: ' đã đăng ký, bạn sẽ nhận được liên kết đặt lại mật khẩu trong vài phút. Nhớ xem cả mục Spam.'),
-            ])),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Container(
+          padding: const EdgeInsets.all(AppSpacing.md),
+          decoration: BoxDecoration(color: success.withValues(alpha: 0.10), borderRadius: AppRadius.lgAll),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(Icons.mark_email_read_rounded, color: success),
+              const SizedBox(width: AppSpacing.sm),
+              Expanded(
+                child: Text.rich(
+                  TextSpan(
+                    children: [
+                      const TextSpan(text: 'Nếu email '),
+                      TextSpan(
+                        text: email,
+                        style: const TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                      const TextSpan(
+                        text:
+                            ' đã đăng ký, bạn sẽ nhận được liên kết đặt lại mật khẩu trong vài phút. Nhớ xem cả mục Spam.',
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
           ),
-        ]),
-      ),
-      const SizedBox(height: AppSpacing.lg),
-      FilledButton(onPressed: () => Navigator.pop(context), child: const Text('Quay lại đăng nhập')),
-      const SizedBox(height: AppSpacing.xs),
-      TextButton(onPressed: onResend, child: Text('Gửi lại', style: theme.textTheme.labelLarge)),
-    ]);
+        ),
+        const SizedBox(height: AppSpacing.lg),
+        FilledButton(onPressed: () => Navigator.pop(context), child: const Text('Quay lại đăng nhập')),
+        const SizedBox(height: AppSpacing.xs),
+        TextButton(
+          onPressed: onResend,
+          child: Text('Gửi lại', style: theme.textTheme.labelLarge),
+        ),
+      ],
+    );
   }
 }

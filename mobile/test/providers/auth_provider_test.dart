@@ -78,7 +78,9 @@ void main() {
   });
 
   test('chưa có hồ sơ (404) → needsProfile → hoàn tất hồ sơ → ready', () async {
-    auth = FakeAuthService(signedIn: const AuthUser(uid: 'uid-new', email: 'new@x.vn'));
+    auth = FakeAuthService(
+      signedIn: const AuthUser(uid: 'uid-new', email: 'new@x.vn'),
+    );
     api = backend.client(auth: auth);
     create();
     await waitFor(AuthStatus.needsProfile);
@@ -169,7 +171,13 @@ void main() {
     await waitFor(AuthStatus.signedOut);
 
     await expectLater(
-      provider.register(email: 'moi@x.vn', password: 'Canteen@123', fullName: 'Châu', studentCode: '0023410001', phone: '0912345678'),
+      provider.register(
+        email: 'moi@x.vn',
+        password: 'Canteen@123',
+        fullName: 'Châu',
+        studentCode: '0023410001',
+        phone: '0912345678',
+      ),
       throwsA(isA<ApiException>()),
     );
     expect(provider.status, AuthStatus.needsProfile);

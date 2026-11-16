@@ -6,14 +6,7 @@ import '../data/remote/api_exception.dart';
 
 /// Trạng thái trống: biểu tượng + tiêu đề + mô tả + nút hành động (không để màn hình "chết").
 class EmptyState extends StatelessWidget {
-  const EmptyState({
-    super.key,
-    required this.icon,
-    required this.title,
-    this.message,
-    this.actionLabel,
-    this.onAction,
-  });
+  const EmptyState({super.key, required this.icon, required this.title, this.message, this.actionLabel, this.onAction});
 
   final IconData icon;
   final String title;
@@ -29,26 +22,31 @@ class EmptyState extends StatelessWidget {
         padding: const EdgeInsets.all(AppSpacing.lg),
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 360),
-          child: Column(mainAxisSize: MainAxisSize.min, children: [
-            Container(
-              width: 96,
-              height: 96,
-              decoration: BoxDecoration(color: context.appColors.subtleBrand, shape: BoxShape.circle),
-              child: Icon(icon, size: 48, color: theme.colorScheme.primary),
-            ),
-            const SizedBox(height: AppSpacing.lg),
-            Text(title, style: theme.textTheme.titleMedium, textAlign: TextAlign.center),
-            if (message != null) ...[
-              const SizedBox(height: AppSpacing.xs),
-              Text(message!,
-                  style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant),
-                  textAlign: TextAlign.center),
-            ],
-            if (actionLabel != null && onAction != null) ...[
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 96,
+                height: 96,
+                decoration: BoxDecoration(color: context.appColors.subtleBrand, shape: BoxShape.circle),
+                child: Icon(icon, size: 48, color: theme.colorScheme.primary),
+              ),
               const SizedBox(height: AppSpacing.lg),
-              FilledButton(onPressed: onAction, child: Text(actionLabel!)),
+              Text(title, style: theme.textTheme.titleMedium, textAlign: TextAlign.center),
+              if (message != null) ...[
+                const SizedBox(height: AppSpacing.xs),
+                Text(
+                  message!,
+                  style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                  textAlign: TextAlign.center,
+                ),
+              ],
+              if (actionLabel != null && onAction != null) ...[
+                const SizedBox(height: AppSpacing.lg),
+                FilledButton(onPressed: onAction, child: Text(actionLabel!)),
+              ],
             ],
-          ]),
+          ),
         ),
       ),
     );
@@ -92,8 +90,10 @@ class SkeletonBox extends StatefulWidget {
 }
 
 class _SkeletonBoxState extends State<SkeletonBox> with SingleTickerProviderStateMixin {
-  late final AnimationController _controller =
-      AnimationController(vsync: this, duration: const Duration(milliseconds: 900))..repeat(reverse: true);
+  late final AnimationController _controller = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 900),
+  )..repeat(reverse: true);
 
   @override
   void dispose() {
@@ -123,20 +123,25 @@ class SkeletonList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => ListView.separated(
-        physics: const NeverScrollableScrollPhysics(),
-        padding: const EdgeInsets.all(AppSpacing.md),
-        itemCount: itemCount,
-        separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.md),
-        itemBuilder: (_, _) => const Row(children: [
-          SkeletonBox(width: 56, height: 56, radius: AppRadius.md),
-          SizedBox(width: AppSpacing.md),
-          Expanded(
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+    physics: const NeverScrollableScrollPhysics(),
+    padding: const EdgeInsets.all(AppSpacing.md),
+    itemCount: itemCount,
+    separatorBuilder: (_, _) => const SizedBox(height: AppSpacing.md),
+    itemBuilder: (_, _) => const Row(
+      children: [
+        SkeletonBox(width: 56, height: 56, radius: AppRadius.md),
+        SizedBox(width: AppSpacing.md),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
               SkeletonBox(height: 14),
               SizedBox(height: AppSpacing.xs),
               SkeletonBox(width: 120, height: 12),
-            ]),
+            ],
           ),
-        ]),
-      );
+        ),
+      ],
+    ),
+  );
 }

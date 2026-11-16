@@ -51,10 +51,10 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
     setState(() => _busy = true);
     try {
       await context.read<AuthProvider>().completeProfile(
-            fullName: _fullName.text,
-            studentCode: _studentCode.text,
-            phone: _phone.text,
-          );
+        fullName: _fullName.text,
+        studentCode: _studentCode.text,
+        phone: _phone.text,
+      );
     } on ApiException catch (e) {
       if (mounted) setState(() => _error = e);
     } finally {
@@ -72,26 +72,29 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
       actions: [TextButton(onPressed: auth.signOut, child: const Text('Đăng xuất'))],
       child: Form(
         key: _formKey,
-        child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-          ListTile(
-            contentPadding: EdgeInsets.zero,
-            leading: const Icon(Icons.mail_outline_rounded),
-            title: const Text('Email'),
-            subtitle: Text(auth.user?.email ?? '', style: theme.textTheme.bodyMedium),
-          ),
-          const SizedBox(height: AppSpacing.xs),
-          FormErrorBanner(profileGeneralError(_error)),
-          ProfileFields(
-            fullName: _fullName,
-            studentCode: _studentCode,
-            phone: _phone,
-            error: _error,
-            lastAction: TextInputAction.done,
-            onSubmitted: (_) => _submit(),
-          ),
-          const SizedBox(height: AppSpacing.lg),
-          BusyButton(label: 'Bắt đầu đặt món', busy: _busy, onPressed: _submit),
-        ]),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: const Icon(Icons.mail_outline_rounded),
+              title: const Text('Email'),
+              subtitle: Text(auth.user?.email ?? '', style: theme.textTheme.bodyMedium),
+            ),
+            const SizedBox(height: AppSpacing.xs),
+            FormErrorBanner(profileGeneralError(_error)),
+            ProfileFields(
+              fullName: _fullName,
+              studentCode: _studentCode,
+              phone: _phone,
+              error: _error,
+              lastAction: TextInputAction.done,
+              onSubmitted: (_) => _submit(),
+            ),
+            const SizedBox(height: AppSpacing.lg),
+            BusyButton(label: 'Bắt đầu đặt món', busy: _busy, onPressed: _submit),
+          ],
+        ),
       ),
     );
   }

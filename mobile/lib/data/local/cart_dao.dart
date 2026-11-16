@@ -35,7 +35,9 @@ class CartDao {
   /// Tổng số món trong giỏ (badge trên thanh điều hướng).
   Future<int> countItems(String userId) async {
     final db = await _helper.database;
-    final result = await db.rawQuery('SELECT COALESCE(SUM(quantity), 0) AS total FROM cart_items WHERE user_id = ?', [userId]);
+    final result = await db.rawQuery('SELECT COALESCE(SUM(quantity), 0) AS total FROM cart_items WHERE user_id = ?', [
+      userId,
+    ]);
     return (result.first['total'] as int?) ?? 0;
   }
 
@@ -90,8 +92,7 @@ class CartDao {
         where: 'user_id = ? AND food_id = ? AND options_key = ? AND note = ? AND id <> ?',
         whereArgs: [current['user_id'], current['food_id'], current['options_key'], value, id],
         limit: 1,
-      ))
-          .firstOrNull;
+      )).firstOrNull;
 
       if (duplicate == null) {
         await txn.update('cart_items', {'note': value}, where: 'id = ?', whereArgs: [id]);

@@ -31,7 +31,8 @@ class AuthLayout extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         automaticallyImplyLeading: showBack,
-        actions: actions ??
+        actions:
+            actions ??
             [
               IconButton(
                 tooltip: 'Cài đặt máy chủ',
@@ -42,14 +43,23 @@ class AuthLayout extends StatelessWidget {
       ),
       body: SafeArea(
         top: false,
-        child: LayoutBuilder(builder: (context, constraints) {
-          final form = _FormColumn(title: title, subtitle: subtitle, showLogo: constraints.maxWidth < 840, child: child);
-          if (constraints.maxWidth < 840) return form;
-          return Row(children: [
-            const Expanded(child: _BrandPanel()),
-            Expanded(child: form),
-          ]);
-        }),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final form = _FormColumn(
+              title: title,
+              subtitle: subtitle,
+              showLogo: constraints.maxWidth < 840,
+              child: child,
+            );
+            if (constraints.maxWidth < 840) return form;
+            return Row(
+              children: [
+                const Expanded(child: _BrandPanel()),
+                Expanded(child: form),
+              ],
+            );
+          },
+        ),
       ),
     );
   }
@@ -76,17 +86,20 @@ class _FormColumn extends StatelessWidget {
       ),
       child: MaxWidthBox(
         maxWidth: 440,
-        child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-          if (showLogo) ...[
-            const Align(alignment: Alignment.centerLeft, child: AppLogo(size: 56)),
-            const SizedBox(height: AppSpacing.lg),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (showLogo) ...[
+              const Align(alignment: Alignment.centerLeft, child: AppLogo(size: 56)),
+              const SizedBox(height: AppSpacing.lg),
+            ],
+            Text(title, style: theme.textTheme.headlineSmall),
+            const SizedBox(height: AppSpacing.xs),
+            Text(subtitle, style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+            const SizedBox(height: AppSpacing.xl),
+            child,
           ],
-          Text(title, style: theme.textTheme.headlineSmall),
-          const SizedBox(height: AppSpacing.xs),
-          Text(subtitle, style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
-          const SizedBox(height: AppSpacing.xl),
-          child,
-        ]),
+        ),
       ),
     );
   }
@@ -102,28 +115,36 @@ class _BrandPanel extends StatelessWidget {
       margin: const EdgeInsets.all(AppSpacing.lg),
       padding: const EdgeInsets.all(AppSpacing.xl),
       decoration: BoxDecoration(color: context.appColors.subtleBrand, borderRadius: AppRadius.xlAll),
-      child: Column(mainAxisAlignment: MainAxisAlignment.center, crossAxisAlignment: CrossAxisAlignment.start, children: [
-        const AppLogo(size: 72),
-        const SizedBox(height: AppSpacing.lg),
-        Text('Smart Canteen', style: theme.textTheme.headlineSmall),
-        const SizedBox(height: AppSpacing.xs),
-        Text('Đặt món trước, đến quầy là có — không cần xếp hàng.',
-            style: theme.textTheme.titleMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
-        const SizedBox(height: AppSpacing.xl),
-        for (final (icon, text) in const [
-          (Icons.restaurant_menu_rounded, 'Thực đơn căn-tin cập nhật theo ngày'),
-          (Icons.qr_code_2_rounded, 'Thanh toán chuyển khoản bằng QR'),
-          (Icons.notifications_active_rounded, 'Báo ngay khi món sẵn sàng'),
-        ])
-          Padding(
-            padding: const EdgeInsets.only(bottom: AppSpacing.md),
-            child: Row(children: [
-              Icon(icon, color: theme.colorScheme.primary),
-              const SizedBox(width: AppSpacing.sm),
-              Expanded(child: Text(text, style: theme.textTheme.bodyMedium)),
-            ]),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const AppLogo(size: 72),
+          const SizedBox(height: AppSpacing.lg),
+          Text('Smart Canteen', style: theme.textTheme.headlineSmall),
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            'Đặt món trước, đến quầy là có — không cần xếp hàng.',
+            style: theme.textTheme.titleMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant),
           ),
-      ]),
+          const SizedBox(height: AppSpacing.xl),
+          for (final (icon, text) in const [
+            (Icons.restaurant_menu_rounded, 'Thực đơn căn-tin cập nhật theo ngày'),
+            (Icons.qr_code_2_rounded, 'Thanh toán chuyển khoản bằng QR'),
+            (Icons.notifications_active_rounded, 'Báo ngay khi món sẵn sàng'),
+          ])
+            Padding(
+              padding: const EdgeInsets.only(bottom: AppSpacing.md),
+              child: Row(
+                children: [
+                  Icon(icon, color: theme.colorScheme.primary),
+                  const SizedBox(width: AppSpacing.sm),
+                  Expanded(child: Text(text, style: theme.textTheme.bodyMedium)),
+                ],
+              ),
+            ),
+        ],
+      ),
     );
   }
 }
@@ -143,7 +164,9 @@ class AppLogo extends StatelessWidget {
       decoration: BoxDecoration(
         color: primary,
         borderRadius: BorderRadius.circular(size * 0.28),
-        boxShadow: [BoxShadow(color: primary.withValues(alpha: 0.3), blurRadius: size * 0.3, offset: Offset(0, size * 0.1))],
+        boxShadow: [
+          BoxShadow(color: primary.withValues(alpha: 0.3), blurRadius: size * 0.3, offset: Offset(0, size * 0.1)),
+        ],
       ),
       child: Icon(Icons.lunch_dining_rounded, color: Colors.white, size: size * 0.56),
     );
@@ -168,13 +191,16 @@ class FormErrorBanner extends StatelessWidget {
               margin: const EdgeInsets.only(bottom: AppSpacing.md),
               padding: const EdgeInsets.all(AppSpacing.sm),
               decoration: BoxDecoration(color: color.withValues(alpha: 0.10), borderRadius: AppRadius.mdAll),
-              child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                Icon(Icons.error_outline_rounded, color: color, size: 20),
-                const SizedBox(width: AppSpacing.xs),
-                Expanded(
-                  child: Text(message!, style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: color)),
-                ),
-              ]),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(Icons.error_outline_rounded, color: color, size: 20),
+                  const SizedBox(width: AppSpacing.xs),
+                  Expanded(
+                    child: Text(message!, style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: color)),
+                  ),
+                ],
+              ),
             ),
     );
   }
@@ -190,11 +216,11 @@ class BusyButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => FilledButton(
-        onPressed: busy ? null : onPressed,
-        child: busy
-            ? const SizedBox.square(dimension: 22, child: CircularProgressIndicator(strokeWidth: 2.5))
-            : Text(label),
-      );
+    onPressed: busy ? null : onPressed,
+    child: busy
+        ? const SizedBox.square(dimension: 22, child: CircularProgressIndicator(strokeWidth: 2.5))
+        : Text(label),
+  );
 }
 
 /// Ô mật khẩu có nút hiện/ẩn.
@@ -227,21 +253,21 @@ class _PasswordFieldState extends State<PasswordField> {
 
   @override
   Widget build(BuildContext context) => TextFormField(
-        controller: widget.controller,
-        obscureText: _obscure,
-        validator: widget.validator,
-        textInputAction: widget.textInputAction,
-        onFieldSubmitted: widget.onSubmitted,
-        autofillHints: widget.autofillHints,
-        decoration: InputDecoration(
-          labelText: widget.label,
-          errorText: widget.errorText,
-          prefixIcon: const Icon(Icons.lock_outline_rounded),
-          suffixIcon: IconButton(
-            tooltip: _obscure ? 'Hiện mật khẩu' : 'Ẩn mật khẩu',
-            icon: Icon(_obscure ? Icons.visibility_outlined : Icons.visibility_off_outlined),
-            onPressed: () => setState(() => _obscure = !_obscure),
-          ),
-        ),
-      );
+    controller: widget.controller,
+    obscureText: _obscure,
+    validator: widget.validator,
+    textInputAction: widget.textInputAction,
+    onFieldSubmitted: widget.onSubmitted,
+    autofillHints: widget.autofillHints,
+    decoration: InputDecoration(
+      labelText: widget.label,
+      errorText: widget.errorText,
+      prefixIcon: const Icon(Icons.lock_outline_rounded),
+      suffixIcon: IconButton(
+        tooltip: _obscure ? 'Hiện mật khẩu' : 'Ẩn mật khẩu',
+        icon: Icon(_obscure ? Icons.visibility_outlined : Icons.visibility_off_outlined),
+        onPressed: () => setState(() => _obscure = !_obscure),
+      ),
+    ),
+  );
 }

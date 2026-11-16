@@ -20,17 +20,22 @@ void main() {
   Future<int> countRows(String table) async =>
       Sqflite.firstIntValue(await (await helper.database).rawQuery('SELECT COUNT(*) FROM $table')) ?? 0;
 
-  CartItem cartItem({String user = 'u1', int foodId = 1, int quantity = 1, String? note, List<CartItemOption> options = const []}) =>
-      CartItem(
-        userId: user,
-        foodId: foodId,
-        foodName: 'Trà sữa',
-        unitPrice: 25000,
-        quantity: quantity,
-        note: note,
-        createdAt: DateTime.utc(2026, 11, 16, 3),
-        options: options,
-      );
+  CartItem cartItem({
+    String user = 'u1',
+    int foodId = 1,
+    int quantity = 1,
+    String? note,
+    List<CartItemOption> options = const [],
+  }) => CartItem(
+    userId: user,
+    foodId: foodId,
+    foodName: 'Trà sữa',
+    unitPrice: 25000,
+    quantity: quantity,
+    note: note,
+    createdAt: DateTime.utc(2026, 11, 16, 3),
+    options: options,
+  );
 
   const sizeL = CartItemOption(optionId: 12, groupName: 'Size', optionName: 'L', extraPrice: 5000);
   const pudding = CartItemOption(optionId: 15, groupName: 'Topping', optionName: 'Pudding', extraPrice: 7000);
@@ -108,36 +113,36 @@ void main() {
 
   group('OrderDao', () {
     OrderDetail detail({String id = 'o1', OrderStatus status = OrderStatus.received, int itemCount = 2}) => OrderDetail(
-          id: id,
-          pickupCode: 'A012',
-          pickupDate: '2026-11-16',
-          status: status,
-          paymentMethod: PaymentMethod.cash,
-          paymentStatus: PaymentStatus.pending,
-          subtotal: 60000,
-          discountAmount: 5000,
-          totalAmount: 55000,
-          totalItems: itemCount,
-          createdAt: DateTime.utc(2026, 11, 16, 3, 0),
-          updatedAt: DateTime.utc(2026, 11, 16, 3, 0),
-          customer: const OrderCustomer(id: 'u1', fullName: 'Sinh viên 1'),
-          items: [
-            for (var i = 0; i < itemCount; i++)
-              OrderItem(
-                foodId: i + 1,
-                foodName: 'Món $i',
-                unitPrice: 25000,
-                optionsPrice: 5000,
-                quantity: 1,
-                lineTotal: 30000,
-                options: const [OrderItemOption(groupName: 'Size', optionName: 'L', extraPrice: 5000)],
-              ),
-          ],
-          history: const [],
-          canCancel: true,
-          allowedNextStatuses: const [],
-          voucherCode: 'GIAM5K',
-        );
+      id: id,
+      pickupCode: 'A012',
+      pickupDate: '2026-11-16',
+      status: status,
+      paymentMethod: PaymentMethod.cash,
+      paymentStatus: PaymentStatus.pending,
+      subtotal: 60000,
+      discountAmount: 5000,
+      totalAmount: 55000,
+      totalItems: itemCount,
+      createdAt: DateTime.utc(2026, 11, 16, 3, 0),
+      updatedAt: DateTime.utc(2026, 11, 16, 3, 0),
+      customer: const OrderCustomer(id: 'u1', fullName: 'Sinh viên 1'),
+      items: [
+        for (var i = 0; i < itemCount; i++)
+          OrderItem(
+            foodId: i + 1,
+            foodName: 'Món $i',
+            unitPrice: 25000,
+            optionsPrice: 5000,
+            quantity: 1,
+            lineTotal: 30000,
+            options: const [OrderItemOption(groupName: 'Size', optionName: 'L', extraPrice: 5000)],
+          ),
+      ],
+      history: const [],
+      canCancel: true,
+      allowedNextStatuses: const [],
+      voucherCode: 'GIAM5K',
+    );
 
     test('lưu chi tiết đơn và đọc lại đầy đủ (offline)', () async {
       final dao = OrderDao(helper);
@@ -231,8 +236,13 @@ void main() {
       final dao = OrderDao(helper);
       await dao.upsertDetail(detail(), 'u1');
 
-      final ok = await dao.updateStatus('o1',
-          status: OrderStatus.cancelled, paymentStatus: PaymentStatus.failed, cancelReason: 'Hết món', updatedAt: DateTime.utc(2026, 11, 16, 5));
+      final ok = await dao.updateStatus(
+        'o1',
+        status: OrderStatus.cancelled,
+        paymentStatus: PaymentStatus.failed,
+        cancelReason: 'Hết món',
+        updatedAt: DateTime.utc(2026, 11, 16, 5),
+      );
       expect(ok, isTrue);
       final order = await dao.getOrder('o1');
       expect(order!.status, OrderStatus.cancelled);

@@ -73,67 +73,85 @@ class _LoginScreenState extends State<LoginScreen> {
       child: AutofillGroup(
         child: Form(
           key: _formKey,
-          child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-            FormErrorBanner(failure?.field == null ? failure?.message : null),
-            TextFormField(
-              controller: _emailController,
-              keyboardType: TextInputType.emailAddress,
-              textInputAction: TextInputAction.next,
-              autocorrect: false,
-              autofillHints: const [AutofillHints.email],
-              validator: Validators.email,
-              decoration: InputDecoration(
-                labelText: 'Email',
-                prefixIcon: const Icon(Icons.mail_outline_rounded),
-                errorText: failure?.field == 'email' ? failure!.message : null,
-              ),
-            ),
-            const SizedBox(height: AppSpacing.md),
-            PasswordField(
-              controller: _passwordController,
-              validator: Validators.password,
-              errorText: failure?.field == 'password' ? failure!.message : null,
-              onSubmitted: (_) => _submit(),
-            ),
-            Align(
-              alignment: Alignment.centerRight,
-              child: TextButton(
-                onPressed: () => Navigator.pushNamed(context, AppRoutes.forgotPassword, arguments: _emailController.text),
-                child: const Text('Quên mật khẩu?'),
-              ),
-            ),
-            const SizedBox(height: AppSpacing.xs),
-            BusyButton(label: 'Đăng nhập', busy: _busy, onPressed: _submit),
-            const SizedBox(height: AppSpacing.md),
-            // Wrap (không phải Row): màn hẹp / chữ lớn thì tự xuống dòng thay vì tràn.
-            Wrap(alignment: WrapAlignment.center, crossAxisAlignment: WrapCrossAlignment.center, children: [
-              Text('Chưa có tài khoản?', style: theme.textTheme.bodyMedium),
-              TextButton(
-                onPressed: () => Navigator.pushNamed(context, AppRoutes.register),
-                child: const Text('Đăng ký'),
-              ),
-            ]),
-            if (widget.showDemoAccounts) ...[
-              const SizedBox(height: AppSpacing.lg),
-              Row(children: [
-                const Expanded(child: Divider()),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
-                  child: Text('Tài khoản demo', style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant)),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              FormErrorBanner(failure?.field == null ? failure?.message : null),
+              TextFormField(
+                controller: _emailController,
+                keyboardType: TextInputType.emailAddress,
+                textInputAction: TextInputAction.next,
+                autocorrect: false,
+                autofillHints: const [AutofillHints.email],
+                validator: Validators.email,
+                decoration: InputDecoration(
+                  labelText: 'Email',
+                  prefixIcon: const Icon(Icons.mail_outline_rounded),
+                  errorText: failure?.field == 'email' ? failure!.message : null,
                 ),
-                const Expanded(child: Divider()),
-              ]),
-              const SizedBox(height: AppSpacing.sm),
-              Wrap(alignment: WrapAlignment.center, spacing: AppSpacing.xs, runSpacing: AppSpacing.xs, children: [
-                for (final (label, email) in _demoAccounts)
-                  ActionChip(
-                    avatar: const Icon(Icons.person_outline_rounded, size: 18),
-                    label: Text(label),
-                    onPressed: _busy ? null : () => _fillDemo(email),
+              ),
+              const SizedBox(height: AppSpacing.md),
+              PasswordField(
+                controller: _passwordController,
+                validator: Validators.password,
+                errorText: failure?.field == 'password' ? failure!.message : null,
+                onSubmitted: (_) => _submit(),
+              ),
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton(
+                  onPressed: () =>
+                      Navigator.pushNamed(context, AppRoutes.forgotPassword, arguments: _emailController.text),
+                  child: const Text('Quên mật khẩu?'),
+                ),
+              ),
+              const SizedBox(height: AppSpacing.xs),
+              BusyButton(label: 'Đăng nhập', busy: _busy, onPressed: _submit),
+              const SizedBox(height: AppSpacing.md),
+              // Wrap (không phải Row): màn hẹp / chữ lớn thì tự xuống dòng thay vì tràn.
+              Wrap(
+                alignment: WrapAlignment.center,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  Text('Chưa có tài khoản?', style: theme.textTheme.bodyMedium),
+                  TextButton(
+                    onPressed: () => Navigator.pushNamed(context, AppRoutes.register),
+                    child: const Text('Đăng ký'),
                   ),
-              ]),
+                ],
+              ),
+              if (widget.showDemoAccounts) ...[
+                const SizedBox(height: AppSpacing.lg),
+                Row(
+                  children: [
+                    const Expanded(child: Divider()),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+                      child: Text(
+                        'Tài khoản demo',
+                        style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                      ),
+                    ),
+                    const Expanded(child: Divider()),
+                  ],
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                Wrap(
+                  alignment: WrapAlignment.center,
+                  spacing: AppSpacing.xs,
+                  runSpacing: AppSpacing.xs,
+                  children: [
+                    for (final (label, email) in _demoAccounts)
+                      ActionChip(
+                        avatar: const Icon(Icons.person_outline_rounded, size: 18),
+                        label: Text(label),
+                        onPressed: _busy ? null : () => _fillDemo(email),
+                      ),
+                  ],
+                ),
+              ],
             ],
-          ]),
+          ),
         ),
       ),
     );

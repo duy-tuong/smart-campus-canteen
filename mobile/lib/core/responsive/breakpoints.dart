@@ -14,8 +14,8 @@ enum ScreenSize {
   static ScreenSize fromWidth(double width) => width < Breakpoints.medium
       ? compact
       : width < Breakpoints.expanded
-          ? medium
-          : expanded;
+      ? medium
+      : expanded;
 
   /// Đọc từ MediaQuery (cả màn hình). Trong một vùng con, dùng LayoutBuilder + [fromWidth].
   static ScreenSize of(BuildContext context) => fromWidth(MediaQuery.sizeOf(context).width);
@@ -33,11 +33,11 @@ abstract final class Breakpoints {
 
   /// Số cột lưới món theo bề rộng vùng chứa: 2 / 3 / 4 / 5.
   static int gridColumns(double width) => switch (width) {
-        < 600 => 2,
-        < 900 => 3,
-        < 1200 => 4,
-        _ => 5,
-      };
+    < 600 => 2,
+    < 900 => 3,
+    < 1200 => 4,
+    _ => 5,
+  };
 }
 
 /// Giới hạn bề rộng nội dung và căn giữa — form, cài đặt, chi tiết trên màn rộng.
@@ -49,7 +49,10 @@ class MaxWidthBox extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Align(
-        alignment: Alignment.topCenter,
-        child: ConstrainedBox(constraints: BoxConstraints(maxWidth: maxWidth), child: child),
-      );
+    alignment: Alignment.topCenter,
+    child: ConstrainedBox(
+      constraints: BoxConstraints(maxWidth: maxWidth),
+      child: child,
+    ),
+  );
 }

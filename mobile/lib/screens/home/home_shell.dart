@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
 
+import 'package:provider/provider.dart';
+
 import '../../core/responsive/responsive_shell.dart';
+import '../../providers/cart_provider.dart';
+import '../../providers/home_tabs.dart';
 import '../../widgets/state_views.dart';
+import '../menu/menu_screen.dart';
 import '../profile/account_screen.dart';
 
 /// Khung chính của sinh viên: 5 tab.
@@ -14,27 +19,61 @@ class HomeShell extends StatefulWidget {
 }
 
 class _HomeShellState extends State<HomeShell> {
-  int _index = 0;
-
-  static const _destinations = [
-    ShellDestination(icon: Icons.restaurant_menu_outlined, selectedIcon: Icons.restaurant_menu_rounded, label: 'Thực đơn'),
-    ShellDestination(icon: Icons.shopping_bag_outlined, selectedIcon: Icons.shopping_bag_rounded, label: 'Giỏ hàng'),
-    ShellDestination(icon: Icons.receipt_long_outlined, selectedIcon: Icons.receipt_long_rounded, label: 'Đơn hàng'),
-    ShellDestination(icon: Icons.notifications_outlined, selectedIcon: Icons.notifications_rounded, label: 'Thông báo'),
-    ShellDestination(icon: Icons.person_outline_rounded, selectedIcon: Icons.person_rounded, label: 'Tài khoản'),
-  ];
+  @override
+  void initState() {
+    super.initState();
+    context.read<HomeTabs>().reset(); // vào app (đăng nhập mới) → luôn bắt đầu ở tab Thực đơn
+  }
 
   @override
   Widget build(BuildContext context) {
+    final tabs = context.watch<HomeTabs>();
+    final cartCount = context.select<CartProvider, int>((c) => c.totalQuantity);
+
     return ResponsiveShell(
-      destinations: _destinations,
-      selectedIndex: _index,
-      onDestinationSelected: (i) => setState(() => _index = i),
+      destinations: [
+        const ShellDestination(
+          icon: Icons.restaurant_menu_outlined,
+          selectedIcon: Icons.restaurant_menu_rounded,
+          label: 'Thực đơn',
+        ),
+        ShellDestination(
+          icon: Icons.shopping_bag_outlined,
+          selectedIcon: Icons.shopping_bag_rounded,
+          label: 'Giỏ hàng',
+          badgeCount: cartCount,
+        ),
+        const ShellDestination(
+          icon: Icons.receipt_long_outlined,
+          selectedIcon: Icons.receipt_long_rounded,
+          label: 'Đơn hàng',
+        ),
+        const ShellDestination(
+          icon: Icons.notifications_outlined,
+          selectedIcon: Icons.notifications_rounded,
+          label: 'Thông báo',
+        ),
+        const ShellDestination(
+          icon: Icons.person_outline_rounded,
+          selectedIcon: Icons.person_rounded,
+          label: 'Tài khoản',
+        ),
+      ],
+      selectedIndex: tabs.index,
+      onDestinationSelected: tabs.select,
       railLeading: Icon(Icons.lunch_dining_rounded, color: Theme.of(context).colorScheme.primary, size: 32),
       pages: const [
-        _ComingSoon(title: 'Thực đơn', icon: Icons.restaurant_menu_rounded, message: 'Lưới món, tìm kiếm và lọc theo danh mục.'),
-        _ComingSoon(title: 'Giỏ hàng', icon: Icons.shopping_bag_rounded, message: 'Giỏ hàng lưu trên máy, đặt món và thanh toán.'),
-        _ComingSoon(title: 'Đơn hàng', icon: Icons.receipt_long_rounded, message: 'Theo dõi đơn realtime và lịch sử đơn offline.'),
+        MenuScreen(),
+        _ComingSoon(
+          title: 'Giỏ hàng',
+          icon: Icons.shopping_bag_rounded,
+          message: 'Giỏ hàng lưu trên máy, đặt món và thanh toán.',
+        ),
+        _ComingSoon(
+          title: 'Đơn hàng',
+          icon: Icons.receipt_long_rounded,
+          message: 'Theo dõi đơn realtime và lịch sử đơn offline.',
+        ),
         _ComingSoon(title: 'Thông báo', icon: Icons.notifications_rounded, message: 'Thông báo khi món sẵn sàng.'),
         AccountScreen(),
       ],
@@ -51,7 +90,7 @@ class _ComingSoon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-        appBar: AppBar(title: Text(title)),
-        body: EmptyState(icon: icon, title: 'Sắp ra mắt', message: message),
-      );
+    appBar: AppBar(title: Text(title)),
+    body: EmptyState(icon: icon, title: 'Sắp ra mắt', message: message),
+  );
 }

@@ -107,20 +107,19 @@ class AppColors extends ThemeExtension<AppColors> {
     Color? price,
     Color? shadow,
     Color? subtleBrand,
-  }) =>
-      AppColors(
-        received: received ?? this.received,
-        cooking: cooking ?? this.cooking,
-        ready: ready ?? this.ready,
-        completed: completed ?? this.completed,
-        cancelled: cancelled ?? this.cancelled,
-        success: success ?? this.success,
-        warning: warning ?? this.warning,
-        rating: rating ?? this.rating,
-        price: price ?? this.price,
-        shadow: shadow ?? this.shadow,
-        subtleBrand: subtleBrand ?? this.subtleBrand,
-      );
+  }) => AppColors(
+    received: received ?? this.received,
+    cooking: cooking ?? this.cooking,
+    ready: ready ?? this.ready,
+    completed: completed ?? this.completed,
+    cancelled: cancelled ?? this.cancelled,
+    success: success ?? this.success,
+    warning: warning ?? this.warning,
+    rating: rating ?? this.rating,
+    price: price ?? this.price,
+    shadow: shadow ?? this.shadow,
+    subtleBrand: subtleBrand ?? this.subtleBrand,
+  );
 
   @override
   AppColors lerp(ThemeExtension<AppColors>? other, double t) {

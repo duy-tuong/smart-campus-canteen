@@ -74,25 +74,24 @@ Map<String, Object?> profileJson({
   String fullName = 'Nguyễn Văn An',
   String role = 'student',
   String? studentCode = '0023410001',
-}) =>
-    {
-      'id': id,
-      'email': email,
-      'fullName': fullName,
-      'studentCode': studentCode,
-      'phone': null,
-      'avatarUrl': null,
-      'role': role,
-      'isActive': true,
-      'createdAt': '2026-11-01T02:00:00Z',
-      'lastLoginAt': null,
-    };
+}) => {
+  'id': id,
+  'email': email,
+  'fullName': fullName,
+  'studentCode': studentCode,
+  'phone': null,
+  'avatarUrl': null,
+  'role': role,
+  'isActive': true,
+  'createdAt': '2026-11-01T02:00:00Z',
+  'lastLoginAt': null,
+};
 
 http.Response jsonResponse(Object? body, int status) => http.Response.bytes(
-      utf8.encode(jsonEncode(body)),
-      status,
-      headers: {'content-type': 'application/json; charset=utf-8'},
-    );
+  utf8.encode(jsonEncode(body)),
+  status,
+  headers: {'content-type': 'application/json; charset=utf-8'},
+);
 
 http.Response problem(int status, String code, String detail, {Map<String, List<String>>? errors}) =>
     jsonResponse({'status': status, 'title': detail, 'detail': detail, 'code': code, 'errors': ?errors}, status);
@@ -113,11 +112,8 @@ class FakeBackend {
 
   void addProfile(Map<String, Object?> json) => profiles[json['id'] as String] = json;
 
-  ApiClient client({required AuthService auth}) => ApiClient(
-        baseUrl: () => 'http://api.test',
-        tokenProvider: auth.idToken,
-        httpClient: MockClient(_handle),
-      );
+  ApiClient client({required AuthService auth}) =>
+      ApiClient(baseUrl: () => 'http://api.test', tokenProvider: auth.idToken, httpClient: MockClient(_handle));
 
   Future<http.Response> _handle(http.Request request) async {
     if (delay > Duration.zero) await Future<void>.delayed(delay);
@@ -141,10 +137,206 @@ class FakeBackend {
       if (takenStudentCodes.contains(code)) {
         return problem(409, 'STUDENT_CODE_TAKEN', 'Mã số sinh viên đã được sử dụng.');
       }
-      final profile = profileJson(id: token, email: '$token@test', fullName: body['fullName'] as String, studentCode: code);
+      final profile = profileJson(
+        id: token,
+        email: '$token@test',
+        fullName: body['fullName'] as String,
+        studentCode: code,
+      );
       profiles[token] = profile;
       return jsonResponse(profile, 201);
     }
+    final menuResponse = _menu(request);
+    if (menuResponse != null) return menuResponse;
     return problem(404, 'NOT_FOUND', 'Không tìm thấy.');
+  }
+
+  // ------------------------------ Thực đơn giả ------------------------------
+
+  /// Món đang yêu thích (PUT/DELETE /api/foods/{id}/favorite).
+  final Set<int> favoriteIds = {};
+
+  /// Bật để PUT/DELETE yêu thích trả lỗi 500 (thử hoàn tác cập nhật lạc quan).
+  bool failFavorite = false;
+
+  final List<Map<String, Object?>> categories = [
+    {'id': 1, 'name': 'Cơm', 'icon': 'rice_bowl', 'sortOrder': 1, 'isActive': true, 'foodCount': 20},
+    {'id': 3, 'name': 'Nước uống', 'icon': 'local_drink', 'sortOrder': 2, 'isActive': true, 'foodCount': 5},
+  ];
+
+  /// 25 món (2 trang khi pageSize = 20): #1 Cơm gà (tùy chọn không bắt buộc), #2 Trà sữa (Size bắt buộc),
+  /// #3 Bánh flan (hết món), còn lại "Món số N".
+  late final List<Map<String, Object?>> foods = [
+    foodJson(1, 'Cơm gà xối mỡ', 35000, categoryId: 1, hasOptions: true, remaining: 8),
+    foodJson(2, 'Trà sữa trân châu', 25000, categoryId: 3, hasOptions: true, rating: 4.5, ratingCount: 2),
+    foodJson(3, 'Bánh flan', 12000, categoryId: 1, soldOut: true),
+    for (var i = 4; i <= 25; i++) foodJson(i, 'Món số $i', 20000 + i * 100, categoryId: i.isEven ? 1 : 3),
+  ];
+
+  static Map<String, Object?> foodJson(
+    int id,
+    String name,
+    int price, {
+    int categoryId = 1,
+    bool hasOptions = false,
+    bool soldOut = false,
+    int? remaining,
+    double rating = 0,
+    int ratingCount = 0,
+  }) => {
+    'id': id,
+    'name': name,
+    'price': price,
+    'imageUrl': null,
+    'categoryId': categoryId,
+    'categoryName': categoryId == 1 ? 'Cơm' : 'Nước uống',
+    'prepTimeMinutes': 5,
+    'averageRating': rating,
+    'ratingCount': ratingCount,
+    'isAvailable': true,
+    'remainingToday': soldOut ? 0 : remaining,
+    'isSoldOut': soldOut,
+    'hasOptions': hasOptions,
+    'isFavorite': false,
+  };
+
+  static Map<String, Object?> _option(int id, String name, int extra, {bool available = true}) => {
+    'id': id,
+    'name': name,
+    'extraPrice': extra,
+    'isAvailable': available,
+    'sortOrder': id,
+  };
+
+  List<Map<String, Object?>> _groupsOf(int foodId) => switch (foodId) {
+    1 => [
+      {
+        'id': 1,
+        'name': 'Món thêm',
+        'isRequired': false,
+        'minSelect': 0,
+        'maxSelect': 2,
+        'sortOrder': 1,
+        'options': [_option(11, 'Trứng ốp la', 6000), _option(12, 'Thêm cơm', 5000), _option(13, 'Canh rau', 3000)],
+      },
+    ],
+    2 => [
+      {
+        'id': 2,
+        'name': 'Size',
+        'isRequired': true,
+        'minSelect': 1,
+        'maxSelect': 1,
+        'sortOrder': 1,
+        'options': [_option(21, 'L', 6000), _option(22, 'XL', 9000)],
+      },
+      {
+        'id': 3,
+        'name': 'Topping',
+        'isRequired': false,
+        'minSelect': 0,
+        'maxSelect': 2,
+        'sortOrder': 2,
+        'options': [_option(31, 'Trân châu', 5000), _option(32, 'Pudding', 7000, available: false)],
+      },
+    ],
+    _ => const [],
+  };
+
+  Map<String, Object?> _withFavorite(Map<String, Object?> food) => {
+    ...food,
+    'isFavorite': favoriteIds.contains(food['id']),
+  };
+
+  Map<String, Object?> _page(List<Map<String, Object?>> all, Uri url) {
+    final page = int.tryParse(url.queryParameters['page'] ?? '') ?? 1;
+    final size = int.tryParse(url.queryParameters['pageSize'] ?? '') ?? 20;
+    final items = all.skip((page - 1) * size).take(size).toList();
+    final totalPages = (all.length / size).ceil();
+    return {
+      'items': items,
+      'page': page,
+      'pageSize': size,
+      'totalCount': all.length,
+      'totalPages': totalPages,
+      'hasNext': page < totalPages,
+    };
+  }
+
+  Map<String, Object?> _review(int id, int rating, String? comment, String? reply) => {
+    'id': id,
+    'foodId': 2,
+    'foodName': 'Trà sữa trân châu',
+    'orderId': 'o$id',
+    'rating': rating,
+    'comment': comment,
+    'authorName': 'An N.',
+    'isMine': false,
+    'canEdit': false,
+    'isHidden': false,
+    'hiddenReason': null,
+    'staffReply': reply,
+    'repliedAt': null,
+    'createdAt': '2026-11-15T04:00:00Z',
+    'updatedAt': '2026-11-15T04:00:00Z',
+  };
+
+  http.Response? _menu(http.Request request) {
+    final path = request.url.path;
+    final query = request.url.queryParameters;
+    if (path == '/api/categories') return jsonResponse(categories, 200);
+
+    if (path == '/api/foods') {
+      final q = query['q']?.toLowerCase();
+      final categoryId = int.tryParse(query['categoryId'] ?? '');
+      final list = foods
+          .where((f) => q == null || (f['name'] as String).toLowerCase().contains(q))
+          .where((f) => categoryId == null || f['categoryId'] == categoryId)
+          .where((f) => query['availableOnly'] != 'true' || f['isSoldOut'] != true)
+          .map(_withFavorite)
+          .toList();
+      return jsonResponse(_page(list, request.url), 200);
+    }
+
+    if (path == '/api/users/me/favorites') {
+      final list = foods.where((f) => favoriteIds.contains(f['id'])).map(_withFavorite).toList();
+      return jsonResponse(_page(list, request.url), 200);
+    }
+
+    final match = RegExp(r'^/api/foods/(\d+)(/favorite|/reviews)?$').firstMatch(path);
+    if (match == null) return null;
+    final id = int.parse(match.group(1)!);
+    final food = foods.where((f) => f['id'] == id).firstOrNull;
+    if (food == null) return problem(404, 'NOT_FOUND', 'Không tìm thấy món.');
+
+    switch (match.group(2)) {
+      case '/favorite':
+        if (failFavorite) return problem(500, 'INTERNAL', 'Máy chủ lỗi.');
+        request.method == 'PUT' ? favoriteIds.add(id) : favoriteIds.remove(id);
+        return http.Response('', 204);
+      case '/reviews':
+        final reviews = id == 2
+            ? [_review(1, 5, 'Rất ngon!', 'Cảm ơn bạn!'), _review(2, 4, null, null)]
+            : const <Map<String, Object?>>[];
+        return jsonResponse({
+          'summary': {
+            'foodId': id,
+            'average': id == 2 ? 4.5 : 0,
+            'count': reviews.length,
+            'distribution': {'5': id == 2 ? 1 : 0, '4': id == 2 ? 1 : 0, '3': 0, '2': 0, '1': 0},
+          },
+          'reviews': _page(reviews, request.url),
+        }, 200);
+      default:
+        return jsonResponse({
+          ..._withFavorite(food),
+          'description': 'Mô tả món ${food['name']}',
+          'dailyLimit': null,
+          'optionGroups': _groupsOf(id),
+          'rowVersion': 'AAAA',
+          'createdAt': '2026-11-01T00:00:00Z',
+          'updatedAt': '2026-11-01T00:00:00Z',
+        }, 200);
+    }
   }
 }

@@ -31,7 +31,13 @@ enum OrderStatus {
   bool get isActive => this == received || this == cooking || this == ready;
 
   /// Thứ tự trên dòng thời gian (hủy không nằm trên dòng thời gian).
-  int get step => switch (this) { received => 0, cooking => 1, ready => 2, completed => 3, cancelled => -1 };
+  int get step => switch (this) {
+    received => 0,
+    cooking => 1,
+    ready => 2,
+    completed => 3,
+    cancelled => -1,
+  };
 
   static OrderStatus fromJson(Object? value) => _byName(values, value, received);
 }

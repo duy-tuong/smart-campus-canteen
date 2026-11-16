@@ -84,16 +84,19 @@ class SplashView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-        body: Center(
-          child: Column(mainAxisSize: MainAxisSize.min, children: [
-            const AppLogo(size: 72),
-            const SizedBox(height: AppSpacing.lg),
-            Text('Smart Canteen', style: Theme.of(context).textTheme.titleMedium),
-            const SizedBox(height: AppSpacing.lg),
-            const SizedBox.square(dimension: 24, child: CircularProgressIndicator(strokeWidth: 2.5)),
-          ]),
-        ),
-      );
+    body: Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const AppLogo(size: 72),
+          const SizedBox(height: AppSpacing.lg),
+          Text('Smart Canteen', style: Theme.of(context).textTheme.titleMedium),
+          const SizedBox(height: AppSpacing.lg),
+          const SizedBox.square(dimension: 24, child: CircularProgressIndicator(strokeWidth: 2.5)),
+        ],
+      ),
+    ),
+  );
 }
 
 /// 403 ACCOUNT_LOCKED.
@@ -105,22 +108,25 @@ class AccountLockedScreen extends StatelessWidget {
     final auth = context.read<AuthProvider>();
     return Scaffold(
       body: SafeArea(
-        child: Column(children: [
-          Expanded(
-            child: EmptyState(
-              icon: Icons.lock_person_rounded,
-              title: 'Tài khoản đã bị khóa',
-              message: 'Tài khoản ${auth.user?.email ?? ''} tạm thời không thể đặt món. '
-                  'Vui lòng liên hệ quầy căn-tin hoặc quản trị viên để được mở khóa.',
-              actionLabel: 'Kiểm tra lại',
-              onAction: auth.loadProfile,
+        child: Column(
+          children: [
+            Expanded(
+              child: EmptyState(
+                icon: Icons.lock_person_rounded,
+                title: 'Tài khoản đã bị khóa',
+                message:
+                    'Tài khoản ${auth.user?.email ?? ''} tạm thời không thể đặt món. '
+                    'Vui lòng liên hệ quầy căn-tin hoặc quản trị viên để được mở khóa.',
+                actionLabel: 'Kiểm tra lại',
+                onAction: auth.loadProfile,
+              ),
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(AppSpacing.md),
-            child: TextButton(onPressed: auth.signOut, child: const Text('Đăng xuất')),
-          ),
-        ]),
+            Padding(
+              padding: const EdgeInsets.all(AppSpacing.md),
+              child: TextButton(onPressed: auth.signOut, child: const Text('Đăng xuất')),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -134,21 +140,27 @@ class SessionErrorScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final auth = context.watch<AuthProvider>();
     return Scaffold(
-      appBar: AppBar(actions: [
-        IconButton(
-          tooltip: 'Cài đặt máy chủ',
-          icon: const Icon(Icons.dns_outlined),
-          onPressed: () => Navigator.pushNamed(context, AppRoutes.serverSettings),
-        ),
-      ]),
-      body: SafeArea(
-        child: Column(children: [
-          Expanded(child: ErrorView(error: auth.error ?? 'unknown', onRetry: auth.loadProfile)),
-          Padding(
-            padding: const EdgeInsets.all(AppSpacing.md),
-            child: TextButton(onPressed: auth.signOut, child: const Text('Đăng xuất')),
+      appBar: AppBar(
+        actions: [
+          IconButton(
+            tooltip: 'Cài đặt máy chủ',
+            icon: const Icon(Icons.dns_outlined),
+            onPressed: () => Navigator.pushNamed(context, AppRoutes.serverSettings),
           ),
-        ]),
+        ],
+      ),
+      body: SafeArea(
+        child: Column(
+          children: [
+            Expanded(
+              child: ErrorView(error: auth.error ?? 'unknown', onRetry: auth.loadProfile),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(AppSpacing.md),
+              child: TextButton(onPressed: auth.signOut, child: const Text('Đăng xuất')),
+            ),
+          ],
+        ),
       ),
     );
   }

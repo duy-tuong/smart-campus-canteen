@@ -43,46 +43,49 @@ class ProfileFields extends StatelessWidget {
   final ValueChanged<String>? onSubmitted;
 
   @override
-  Widget build(BuildContext context) => Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-        TextFormField(
-          controller: fullName,
-          textCapitalization: TextCapitalization.words,
-          textInputAction: TextInputAction.next,
-          autofillHints: const [AutofillHints.name],
-          validator: Validators.fullName,
-          decoration: InputDecoration(
-            labelText: 'Họ và tên',
-            prefixIcon: const Icon(Icons.badge_outlined),
-            errorText: profileFieldError(error, 'fullName'),
-          ),
+  Widget build(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: [
+      TextFormField(
+        controller: fullName,
+        textCapitalization: TextCapitalization.words,
+        textInputAction: TextInputAction.next,
+        autofillHints: const [AutofillHints.name],
+        validator: Validators.fullName,
+        decoration: InputDecoration(
+          labelText: 'Họ và tên',
+          prefixIcon: const Icon(Icons.badge_outlined),
+          errorText: profileFieldError(error, 'fullName'),
         ),
-        const SizedBox(height: AppSpacing.md),
-        TextFormField(
-          controller: studentCode,
-          keyboardType: TextInputType.number,
-          textInputAction: TextInputAction.next,
-          inputFormatters: [FilteringTextInputFormatter.digitsOnly, LengthLimitingTextInputFormatter(10)],
-          validator: Validators.studentCode,
-          decoration: InputDecoration(
-            labelText: 'Mã số sinh viên',
-            hintText: '10 chữ số',
-            prefixIcon: const Icon(Icons.school_outlined),
-            errorText: profileFieldError(error, 'studentCode'),
-          ),
+      ),
+      const SizedBox(height: AppSpacing.md),
+      TextFormField(
+        controller: studentCode,
+        keyboardType: TextInputType.number,
+        textInputAction: TextInputAction.next,
+        inputFormatters: [FilteringTextInputFormatter.digitsOnly, LengthLimitingTextInputFormatter(10)],
+        validator: Validators.studentCode,
+        decoration: InputDecoration(
+          labelText: 'Mã số sinh viên',
+          hintText: '10 chữ số',
+          prefixIcon: const Icon(Icons.school_outlined),
+          errorText: profileFieldError(error, 'studentCode'),
         ),
-        const SizedBox(height: AppSpacing.md),
-        TextFormField(
-          controller: phone,
-          keyboardType: TextInputType.phone,
-          textInputAction: lastAction,
-          onFieldSubmitted: onSubmitted,
-          autofillHints: const [AutofillHints.telephoneNumber],
-          validator: Validators.optionalPhone,
-          decoration: InputDecoration(
-            labelText: 'Số điện thoại (không bắt buộc)',
-            prefixIcon: const Icon(Icons.phone_outlined),
-            errorText: profileFieldError(error, 'phone'),
-          ),
+      ),
+      const SizedBox(height: AppSpacing.md),
+      TextFormField(
+        controller: phone,
+        keyboardType: TextInputType.phone,
+        textInputAction: lastAction,
+        onFieldSubmitted: onSubmitted,
+        autofillHints: const [AutofillHints.telephoneNumber],
+        validator: Validators.optionalPhone,
+        decoration: InputDecoration(
+          labelText: 'Số điện thoại (không bắt buộc)',
+          prefixIcon: const Icon(Icons.phone_outlined),
+          errorText: profileFieldError(error, 'phone'),
         ),
-      ]);
+      ),
+    ],
+  );
 }

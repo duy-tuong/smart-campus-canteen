@@ -10,10 +10,10 @@ import 'package:http/testing.dart';
 
 void main() {
   http.Response json(Object body, int status) => http.Response.bytes(
-        utf8.encode(jsonEncode(body)),
-        status,
-        headers: {'content-type': 'application/json; charset=utf-8'},
-      );
+    utf8.encode(jsonEncode(body)),
+    status,
+    headers: {'content-type': 'application/json; charset=utf-8'},
+  );
 
   ApiClient client(MockClientHandler handler, {String? token = 'tok', Duration timeout = const Duration(seconds: 5)}) =>
       ApiClient(
@@ -30,7 +30,15 @@ void main() {
       return json({'name': 'Cơm gà xối mỡ'}, 200);
     });
 
-    final body = await api.get('/api/foods', query: {'q': 'com ga', 'ids': [1, 2], 'page': 2, 'skip': null});
+    final body = await api.get(
+      '/api/foods',
+      query: {
+        'q': 'com ga',
+        'ids': [1, 2],
+        'page': 2,
+        'skip': null,
+      },
+    );
 
     expect(body['name'], 'Cơm gà xối mỡ');
     expect(captured.method, 'GET');
@@ -70,17 +78,21 @@ void main() {
   });
 
   test('lỗi ProblemDetails → ApiException với code, lỗi trường và lỗi từng dòng', () async {
-    final api = client((_) async => json({
-          'status': 422,
-          'title': 'Giỏ hàng có món không hợp lệ',
-          'detail': 'Một số món không đặt được.',
-          'code': 'ORDER_ITEMS_INVALID',
-          'traceId': 't-1',
-          'errors': {'Note': ['Ghi chú tối đa 200 ký tự.']},
-          'items': [
-            {'index': 0, 'foodId': 7, 'code': 'ITEM_SOLD_OUT', 'message': 'Hết món', 'remaining': 0},
-          ],
-        }, 422));
+    final api = client(
+      (_) async => json({
+        'status': 422,
+        'title': 'Giỏ hàng có món không hợp lệ',
+        'detail': 'Một số món không đặt được.',
+        'code': 'ORDER_ITEMS_INVALID',
+        'traceId': 't-1',
+        'errors': {
+          'Note': ['Ghi chú tối đa 200 ký tự.'],
+        },
+        'items': [
+          {'index': 0, 'foodId': 7, 'code': 'ITEM_SOLD_OUT', 'message': 'Hết món', 'remaining': 0},
+        ],
+      }, 422),
+    );
 
     try {
       await api.post('/api/orders/quote', body: {});

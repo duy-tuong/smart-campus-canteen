@@ -8,8 +8,8 @@ import '../core/config/app_config.dart';
 ///  - Địa chỉ máy chủ backend
 class SettingsProvider extends ChangeNotifier {
   SettingsProvider(this._prefs)
-      : _themeMode = _readThemeMode(_prefs),
-        _apiBaseUrl = _prefs.getString(_kApiBaseUrl) ?? AppConfig.defaultApiBaseUrl;
+    : _themeMode = _readThemeMode(_prefs),
+      _apiBaseUrl = _prefs.getString(_kApiBaseUrl) ?? AppConfig.defaultApiBaseUrl;
 
   static const _kThemeMode = 'settings.themeMode';
   static const _kApiBaseUrl = 'settings.apiBaseUrl';
@@ -50,8 +50,8 @@ class SettingsProvider extends ChangeNotifier {
   }
 
   static ThemeMode _readThemeMode(SharedPreferences prefs) => switch (prefs.getString(_kThemeMode)) {
-        'light' => ThemeMode.light,
-        'dark' => ThemeMode.dark,
-        _ => ThemeMode.system,
-      };
+    'light' => ThemeMode.light,
+    'dark' => ThemeMode.dark,
+    _ => ThemeMode.system,
+  };
 }

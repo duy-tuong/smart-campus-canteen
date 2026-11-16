@@ -4,6 +4,10 @@ import '../../screens/auth/auth_gate.dart';
 import '../../screens/auth/forgot_password_screen.dart';
 import '../../screens/auth/register_screen.dart';
 import '../../screens/auth/server_settings_screen.dart';
+import '../../models/menu.dart';
+import '../../screens/menu/favorites_screen.dart';
+import '../../screens/menu/food_detail_screen.dart';
+import '../../screens/menu/search_screen.dart';
 import '../../widgets/state_views.dart';
 
 /// Tên route và bảng điều hướng của app.
@@ -17,34 +21,59 @@ abstract final class AppRoutes {
   static const register = '/register';
   static const forgotPassword = '/forgot-password';
   static const serverSettings = '/settings/server';
+  static const search = '/search';
+  static const favorites = '/favorites';
+
+  /// Chi tiết món — arguments: [FoodRouteArgs] (hoặc id món kiểu int).
+  static const food = '/food';
 
   static Map<String, WidgetBuilder> get routes => {
-        home: (_) => const AuthGate(),
-        register: (_) => const RegisterScreen(),
-        serverSettings: (_) => const ServerSettingsScreen(),
-      };
+    home: (_) => const AuthGate(),
+    register: (_) => const RegisterScreen(),
+    serverSettings: (_) => const ServerSettingsScreen(),
+    search: (_) => const SearchScreen(),
+    favorites: (_) => const FavoritesScreen(),
+  };
 
   /// Route có tham số.
   static Route<dynamic>? onGenerateRoute(RouteSettings settings) => switch (settings.name) {
-        forgotPassword => MaterialPageRoute(
-            settings: settings,
-            builder: (_) => ForgotPasswordScreen(initialEmail: settings.arguments as String?),
-          ),
-        _ => null,
-      };
+    forgotPassword => MaterialPageRoute(
+      settings: settings,
+      builder: (_) => ForgotPasswordScreen(initialEmail: settings.arguments as String?),
+    ),
+    food => MaterialPageRoute(
+      settings: settings,
+      builder: (_) => switch (settings.arguments) {
+        FoodRouteArgs(:final id, :final preview) => FoodDetailScreen(foodId: id, preview: preview),
+        int id => FoodDetailScreen(foodId: id),
+        _ => throw ArgumentError('Route ${settings.name} cần id món'),
+      },
+    ),
+    _ => null,
+  };
 
   /// Route không tồn tại → màn báo lỗi thay vì crash.
   static Route<dynamic> onUnknownRoute(RouteSettings settings) => MaterialPageRoute(
-        settings: settings,
-        builder: (context) => Scaffold(
-          appBar: AppBar(),
-          body: EmptyState(
-            icon: Icons.explore_off_outlined,
-            title: 'Không tìm thấy trang',
-            message: 'Đường dẫn "${settings.name}" không tồn tại.',
-            actionLabel: 'Về trang chủ',
-            onAction: () => Navigator.of(context).pushNamedAndRemoveUntil(home, (_) => false),
-          ),
-        ),
-      );
+    settings: settings,
+    builder: (context) => Scaffold(
+      appBar: AppBar(),
+      body: EmptyState(
+        icon: Icons.explore_off_outlined,
+        title: 'Không tìm thấy trang',
+        message: 'Đường dẫn "${settings.name}" không tồn tại.',
+        actionLabel: 'Về trang chủ',
+        onAction: () => Navigator.of(context).pushNamedAndRemoveUntil(home, (_) => false),
+      ),
+    ),
+  );
+}
+
+/// Tham số mở màn Chi tiết món.
+class FoodRouteArgs {
+  const FoodRouteArgs(this.id, {this.preview});
+
+  final int id;
+
+  /// Bản tóm tắt từ danh sách — hiện ngay tên/ảnh trong lúc tải chi tiết.
+  final FoodSummary? preview;
 }

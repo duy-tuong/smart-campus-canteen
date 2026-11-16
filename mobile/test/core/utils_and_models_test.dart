@@ -201,7 +201,13 @@ void main() {
         'history': [
           {'fromStatus': null, 'toStatus': 'received', 'changedByName': 'An', 'changedAt': '2026-11-16T03:00:00Z'},
         ],
-        'payment': {'method': 'bankTransfer', 'status': 'pending', 'amount': 8000, 'qrCode': '000201...', 'expiresAt': '2026-11-16T03:15:00Z'},
+        'payment': {
+          'method': 'bankTransfer',
+          'status': 'pending',
+          'amount': 8000,
+          'qrCode': '000201...',
+          'expiresAt': '2026-11-16T03:15:00Z',
+        },
         'canCancel': true,
         'allowedNextStatuses': ['cooking', 'cancelled'],
       });

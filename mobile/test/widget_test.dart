@@ -21,14 +21,19 @@ void main() {
 
   group('ResponsiveShell', () {
     Widget shell() => ResponsiveShell(
-          selectedIndex: 0,
-          onDestinationSelected: (_) {},
-          destinations: const [
-            ShellDestination(icon: Icons.home_outlined, selectedIcon: Icons.home, label: 'A'),
-            ShellDestination(icon: Icons.shopping_bag_outlined, selectedIcon: Icons.shopping_bag, label: 'B', badgeCount: 3),
-          ],
-          pages: const [Text('trang A'), Text('trang B')],
-        );
+      selectedIndex: 0,
+      onDestinationSelected: (_) {},
+      destinations: const [
+        ShellDestination(icon: Icons.home_outlined, selectedIcon: Icons.home, label: 'A'),
+        ShellDestination(
+          icon: Icons.shopping_bag_outlined,
+          selectedIcon: Icons.shopping_bag,
+          label: 'B',
+          badgeCount: 3,
+        ),
+      ],
+      pages: const [Text('trang A'), Text('trang B')],
+    );
 
     testWidgets('< 600px: thanh điều hướng dưới, có badge', (tester) async {
       setScreen(tester, 400);
@@ -47,15 +52,20 @@ void main() {
 
     testWidgets('điện thoại xoay ngang (thấp 360px, 5 mục): rail không bị tràn', (tester) async {
       setScreen(tester, 800, 360);
-      await tester.pumpWidget(wrap(ResponsiveShell(
-        selectedIndex: 0,
-        onDestinationSelected: (_) {},
-        railLeading: const Icon(Icons.lunch_dining, size: 32),
-        destinations: [
-          for (var i = 0; i < 5; i++) ShellDestination(icon: Icons.circle_outlined, selectedIcon: Icons.circle, label: 'Mục $i'),
-        ],
-        pages: [for (var i = 0; i < 5; i++) Text('trang $i')],
-      )));
+      await tester.pumpWidget(
+        wrap(
+          ResponsiveShell(
+            selectedIndex: 0,
+            onDestinationSelected: (_) {},
+            railLeading: const Icon(Icons.lunch_dining, size: 32),
+            destinations: [
+              for (var i = 0; i < 5; i++)
+                ShellDestination(icon: Icons.circle_outlined, selectedIcon: Icons.circle, label: 'Mục $i'),
+            ],
+            pages: [for (var i = 0; i < 5; i++) Text('trang $i')],
+          ),
+        ),
+      );
       expect(tester.takeException(), isNull);
       expect(find.byType(NavigationRail), findsOneWidget);
     });
@@ -70,7 +80,13 @@ void main() {
   group('AsyncValueView', () {
     testWidgets('waiting → skeleton, done → dữ liệu', (tester) async {
       final completer = Completer<String>();
-      await tester.pumpWidget(wrap(Scaffold(body: AsyncValueView<String>(future: completer.future, builder: (_, s) => Text(s)))));
+      await tester.pumpWidget(
+        wrap(
+          Scaffold(
+            body: AsyncValueView<String>(future: completer.future, builder: (_, s) => Text(s)),
+          ),
+        ),
+      );
       expect(find.byType(SkeletonList), findsOneWidget);
 
       completer.complete('Xong');
@@ -81,13 +97,17 @@ void main() {
     testWidgets('lỗi mạng → ErrorView + nút Thử lại', (tester) async {
       var retried = false;
       final completer = Completer<String>();
-      await tester.pumpWidget(wrap(Scaffold(
-        body: AsyncValueView<String>(
-          future: completer.future,
-          builder: (_, s) => Text(s),
-          onRetry: () => retried = true,
+      await tester.pumpWidget(
+        wrap(
+          Scaffold(
+            body: AsyncValueView<String>(
+              future: completer.future,
+              builder: (_, s) => Text(s),
+              onRetry: () => retried = true,
+            ),
+          ),
         ),
-      )));
+      );
       completer.completeError(ApiException.network());
       await tester.pump();
       expect(find.text('Không có kết nối'), findsOneWidget);
@@ -96,23 +116,31 @@ void main() {
     });
 
     testWidgets('rỗng → trạng thái trống', (tester) async {
-      await tester.pumpWidget(wrap(Scaffold(
-        body: AsyncValueView<List<int>>(
-          future: Future.value(const []),
-          builder: (_, _) => const Text('có dữ liệu'),
-          isEmpty: (list) => list.isEmpty,
-          empty: const EmptyState(icon: Icons.receipt_long, title: 'Chưa có đơn nào'),
+      await tester.pumpWidget(
+        wrap(
+          Scaffold(
+            body: AsyncValueView<List<int>>(
+              future: Future.value(const []),
+              builder: (_, _) => const Text('có dữ liệu'),
+              isEmpty: (list) => list.isEmpty,
+              empty: const EmptyState(icon: Icons.receipt_long, title: 'Chưa có đơn nào'),
+            ),
+          ),
         ),
-      )));
+      );
       await tester.pump();
       expect(find.text('Chưa có đơn nào'), findsOneWidget);
     });
   });
 
   testWidgets('StatusChip và PriceText hiển thị đúng', (tester) async {
-    await tester.pumpWidget(wrap(const Scaffold(
-      body: Column(children: [StatusChip(OrderStatus.ready), PriceText(35000, originalAmount: 40000)]),
-    )));
+    await tester.pumpWidget(
+      wrap(
+        const Scaffold(
+          body: Column(children: [StatusChip(OrderStatus.ready), PriceText(35000, originalAmount: 40000)]),
+        ),
+      ),
+    );
     expect(find.text('Mời nhận món'), findsOneWidget);
     expect(find.text('35.000đ'), findsOneWidget);
     expect(find.text('40.000đ'), findsOneWidget);

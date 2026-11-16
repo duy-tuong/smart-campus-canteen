@@ -19,24 +19,33 @@ class SearchHistoryDao {
 
     final db = await _helper.database;
     await db.transaction((txn) async {
-      await txn.insert(
-        'search_history',
-        {'user_id': userId, 'keyword': value, 'searched_at': _clock().millisecondsSinceEpoch},
-        conflictAlgorithm: ConflictAlgorithm.replace,
-      );
-      await txn.rawDelete('''
+      await txn.insert('search_history', {
+        'user_id': userId,
+        'keyword': value,
+        'searched_at': _clock().millisecondsSinceEpoch,
+      }, conflictAlgorithm: ConflictAlgorithm.replace);
+      await txn.rawDelete(
+        '''
         DELETE FROM search_history
         WHERE user_id = ? AND id NOT IN (
           SELECT id FROM search_history WHERE user_id = ? ORDER BY searched_at DESC, id DESC LIMIT ?
-        )''', [userId, userId, maxEntries]);
+        )''',
+        [userId, userId, maxEntries],
+      );
     });
   }
 
   /// Từ khóa gần đây nhất trước.
   Future<List<String>> recent(String userId, {int limit = 8}) async {
     final db = await _helper.database;
-    final rows = await db.query('search_history',
-        columns: ['keyword'], where: 'user_id = ?', whereArgs: [userId], orderBy: 'searched_at DESC, id DESC', limit: limit);
+    final rows = await db.query(
+      'search_history',
+      columns: ['keyword'],
+      where: 'user_id = ?',
+      whereArgs: [userId],
+      orderBy: 'searched_at DESC, id DESC',
+      limit: limit,
+    );
     return rows.map((r) => r['keyword'] as String).toList();
   }
 

@@ -14,16 +14,13 @@ class ApiException implements Exception {
 
   /// Không kết nối được máy chủ (sai địa chỉ, backend chưa chạy, mất mạng).
   factory ApiException.network([String? detail]) => ApiException(
-        statusCode: 0,
-        code: networkError,
-        message: detail ?? 'Không kết nối được máy chủ. Kiểm tra mạng hoặc địa chỉ máy chủ trong Cài đặt.',
-      );
+    statusCode: 0,
+    code: networkError,
+    message: detail ?? 'Không kết nối được máy chủ. Kiểm tra mạng hoặc địa chỉ máy chủ trong Cài đặt.',
+  );
 
-  factory ApiException.timeout() => ApiException(
-        statusCode: 0,
-        code: timeoutError,
-        message: 'Máy chủ phản hồi quá lâu. Vui lòng thử lại.',
-      );
+  factory ApiException.timeout() =>
+      ApiException(statusCode: 0, code: timeoutError, message: 'Máy chủ phản hồi quá lâu. Vui lòng thử lại.');
 
   /// Đọc body lỗi (đã jsonDecode). Body không đúng chuẩn vẫn trả về lỗi có nghĩa.
   factory ApiException.fromResponse(int statusCode, Object? body) {
@@ -38,8 +35,9 @@ class ApiException implements Exception {
     }
 
     final extras = Map<String, dynamic>.from(json)
-      ..removeWhere((key, _) => const {'type', 'title', 'status', 'detail', 'code', 'traceId', 'errors', 'instance'}
-          .contains(key));
+      ..removeWhere(
+        (key, _) => const {'type', 'title', 'status', 'detail', 'code', 'traceId', 'errors', 'instance'}.contains(key),
+      );
 
     return ApiException(
       statusCode: statusCode,
@@ -87,21 +85,21 @@ class ApiException implements Exception {
   String toString() => 'ApiException($statusCode $code: $message)';
 
   static String _codeFromStatus(int status) => switch (status) {
-        400 => 'VALIDATION_ERROR',
-        401 => 'UNAUTHORIZED',
-        403 => 'FORBIDDEN',
-        404 => 'NOT_FOUND',
-        409 => 'CONFLICT',
-        _ => 'HTTP_$status',
-      };
+    400 => 'VALIDATION_ERROR',
+    401 => 'UNAUTHORIZED',
+    403 => 'FORBIDDEN',
+    404 => 'NOT_FOUND',
+    409 => 'CONFLICT',
+    _ => 'HTTP_$status',
+  };
 
   static String _messageFromStatus(int status) => switch (status) {
-        401 => 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.',
-        403 => 'Bạn không có quyền thực hiện thao tác này.',
-        404 => 'Không tìm thấy dữ liệu.',
-        >= 500 => 'Máy chủ đang gặp sự cố. Vui lòng thử lại sau.',
-        _ => 'Đã có lỗi xảy ra (mã $status).',
-      };
+    401 => 'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.',
+    403 => 'Bạn không có quyền thực hiện thao tác này.',
+    404 => 'Không tìm thấy dữ liệu.',
+    >= 500 => 'Máy chủ đang gặp sự cố. Vui lòng thử lại sau.',
+    _ => 'Đã có lỗi xảy ra (mã $status).',
+  };
 }
 
 /// Mã lỗi backend mà toàn app cần xử lý chung.

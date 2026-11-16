@@ -17,17 +17,17 @@ class UserProfile {
   });
 
   factory UserProfile.fromJson(Map<String, dynamic> json) => UserProfile(
-        id: json['id'] as String,
-        email: json['email'] as String,
-        fullName: json['fullName'] as String,
-        studentCode: json['studentCode'] as String?,
-        phone: json['phone'] as String?,
-        avatarUrl: json['avatarUrl'] as String?,
-        role: UserRole.fromJson(json['role']),
-        isActive: json['isActive'] as bool? ?? true,
-        createdAt: VnTime.parse(json['createdAt'] as String),
-        lastLoginAt: VnTime.tryParse(json['lastLoginAt'] as String?),
-      );
+    id: json['id'] as String,
+    email: json['email'] as String,
+    fullName: json['fullName'] as String,
+    studentCode: json['studentCode'] as String?,
+    phone: json['phone'] as String?,
+    avatarUrl: json['avatarUrl'] as String?,
+    role: UserRole.fromJson(json['role']),
+    isActive: json['isActive'] as bool? ?? true,
+    createdAt: VnTime.parse(json['createdAt'] as String),
+    lastLoginAt: VnTime.tryParse(json['lastLoginAt'] as String?),
+  );
 
   final String id;
   final String email;

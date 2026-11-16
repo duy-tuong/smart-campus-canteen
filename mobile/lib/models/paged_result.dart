@@ -10,10 +10,7 @@ class PagedResult<T> {
   });
 
   factory PagedResult.fromJson(Map<String, dynamic> json, T Function(Map<String, dynamic>) itemFromJson) {
-    final items = (json['items'] as List? ?? const [])
-        .whereType<Map<String, dynamic>>()
-        .map(itemFromJson)
-        .toList();
+    final items = (json['items'] as List? ?? const []).whereType<Map<String, dynamic>>().map(itemFromJson).toList();
     final page = (json['page'] as num?)?.toInt() ?? 1;
     final totalPages = (json['totalPages'] as num?)?.toInt() ?? 1;
     return PagedResult(

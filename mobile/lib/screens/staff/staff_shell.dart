@@ -25,12 +25,28 @@ class _StaffShellState extends State<StaffShell> {
 
     final tabs = <(ShellDestination, Widget)>[
       (
-        const ShellDestination(icon: Icons.view_kanban_outlined, selectedIcon: Icons.view_kanban_rounded, label: 'Bảng đơn'),
-        const _ComingSoon('Bảng đơn', Icons.view_kanban_rounded, 'Đơn mới hiện ngay theo thời gian thực, chuyển bước bằng một chạm.'),
+        const ShellDestination(
+          icon: Icons.view_kanban_outlined,
+          selectedIcon: Icons.view_kanban_rounded,
+          label: 'Bảng đơn',
+        ),
+        const _ComingSoon(
+          'Bảng đơn',
+          Icons.view_kanban_rounded,
+          'Đơn mới hiện ngay theo thời gian thực, chuyển bước bằng một chạm.',
+        ),
       ),
       (
-        const ShellDestination(icon: Icons.menu_book_outlined, selectedIcon: Icons.menu_book_rounded, label: 'Thực đơn'),
-        const _ComingSoon('Quản lý thực đơn', Icons.menu_book_rounded, 'Thêm, sửa món, tùy chọn, ảnh và số suất mỗi ngày.'),
+        const ShellDestination(
+          icon: Icons.menu_book_outlined,
+          selectedIcon: Icons.menu_book_rounded,
+          label: 'Thực đơn',
+        ),
+        const _ComingSoon(
+          'Quản lý thực đơn',
+          Icons.menu_book_rounded,
+          'Thêm, sửa món, tùy chọn, ảnh và số suất mỗi ngày.',
+        ),
       ),
       (
         const ShellDestination(icon: Icons.insights_outlined, selectedIcon: Icons.insights_rounded, label: 'Thống kê'),
@@ -42,7 +58,11 @@ class _StaffShellState extends State<StaffShell> {
           const _ComingSoon('Người dùng', Icons.group_rounded, 'Tìm kiếm, đổi vai trò, khóa / mở khóa tài khoản.'),
         ),
       (
-        const ShellDestination(icon: Icons.person_outline_rounded, selectedIcon: Icons.person_rounded, label: 'Tài khoản'),
+        const ShellDestination(
+          icon: Icons.person_outline_rounded,
+          selectedIcon: Icons.person_rounded,
+          label: 'Tài khoản',
+        ),
         const AccountScreen(),
       ),
     ];
@@ -67,7 +87,7 @@ class _ComingSoon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-        appBar: AppBar(title: Text(title)),
-        body: EmptyState(icon: icon, title: 'Sắp ra mắt', message: message),
-      );
+    appBar: AppBar(title: Text(title)),
+    body: EmptyState(icon: icon, title: 'Sắp ra mắt', message: message),
+  );
 }

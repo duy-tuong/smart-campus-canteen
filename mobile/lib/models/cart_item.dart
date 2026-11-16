@@ -9,12 +9,12 @@ class CartItemOption {
   });
 
   factory CartItemOption.fromMap(Map<String, Object?> map) => CartItemOption(
-        id: map['id'] as int?,
-        optionId: map['option_id'] as int,
-        groupName: map['group_name'] as String,
-        optionName: map['option_name'] as String,
-        extraPrice: map['extra_price'] as int,
-      );
+    id: map['id'] as int?,
+    optionId: map['option_id'] as int,
+    groupName: map['group_name'] as String,
+    optionName: map['option_name'] as String,
+    extraPrice: map['extra_price'] as int,
+  );
 
   final int? id;
   final int optionId;
@@ -23,12 +23,12 @@ class CartItemOption {
   final int extraPrice;
 
   Map<String, Object?> toMap(int cartItemId) => {
-        'cart_item_id': cartItemId,
-        'option_id': optionId,
-        'group_name': groupName,
-        'option_name': optionName,
-        'extra_price': extraPrice,
-      };
+    'cart_item_id': cartItemId,
+    'option_id': optionId,
+    'group_name': groupName,
+    'option_name': optionName,
+    'extra_price': extraPrice,
+  };
 }
 
 /// Một dòng trong giỏ hàng — lưu SQLite (bảng cart_items + cart_item_options) để giữ giỏ khi tắt app.
@@ -49,18 +49,18 @@ class CartItem {
   });
 
   factory CartItem.fromMap(Map<String, Object?> map, List<CartItemOption> options) => CartItem(
-        id: map['id'] as int?,
-        userId: map['user_id'] as String,
-        foodId: map['food_id'] as int,
-        foodName: map['food_name'] as String,
-        imageUrl: map['image_url'] as String?,
-        unitPrice: map['unit_price'] as int,
-        quantity: map['quantity'] as int,
-        // Lưu "" thay cho null để UNIQUE gộp được dòng không ghi chú (SQLite coi các NULL là khác nhau).
-        note: (map['note'] as String?)?.isEmpty ?? true ? null : map['note'] as String,
-        createdAt: DateTime.fromMillisecondsSinceEpoch(map['created_at'] as int, isUtc: true),
-        options: options,
-      );
+    id: map['id'] as int?,
+    userId: map['user_id'] as String,
+    foodId: map['food_id'] as int,
+    foodName: map['food_name'] as String,
+    imageUrl: map['image_url'] as String?,
+    unitPrice: map['unit_price'] as int,
+    quantity: map['quantity'] as int,
+    // Lưu "" thay cho null để UNIQUE gộp được dòng không ghi chú (SQLite coi các NULL là khác nhau).
+    note: (map['note'] as String?)?.isEmpty ?? true ? null : map['note'] as String,
+    createdAt: DateTime.fromMillisecondsSinceEpoch(map['created_at'] as int, isUtc: true),
+    options: options,
+  );
 
   final int? id;
   final String userId;
@@ -85,28 +85,28 @@ class CartItem {
   String get optionsText => options.map((o) => o.optionName).join(', ');
 
   Map<String, Object?> toMap() => {
-        if (id != null) 'id': id,
-        'user_id': userId,
-        'food_id': foodId,
-        'food_name': foodName,
-        'image_url': imageUrl,
-        'unit_price': unitPrice,
-        'quantity': quantity,
-        'note': note ?? '',
-        'options_key': optionsKey,
-        'created_at': createdAt.millisecondsSinceEpoch,
-      };
+    if (id != null) 'id': id,
+    'user_id': userId,
+    'food_id': foodId,
+    'food_name': foodName,
+    'image_url': imageUrl,
+    'unit_price': unitPrice,
+    'quantity': quantity,
+    'note': note ?? '',
+    'options_key': optionsKey,
+    'created_at': createdAt.millisecondsSinceEpoch,
+  };
 
   CartItem copyWith({int? id, int? quantity, String? note}) => CartItem(
-        id: id ?? this.id,
-        userId: userId,
-        foodId: foodId,
-        foodName: foodName,
-        imageUrl: imageUrl,
-        unitPrice: unitPrice,
-        quantity: quantity ?? this.quantity,
-        note: note ?? this.note,
-        createdAt: createdAt,
-        options: options,
-      );
+    id: id ?? this.id,
+    userId: userId,
+    foodId: foodId,
+    foodName: foodName,
+    imageUrl: imageUrl,
+    unitPrice: unitPrice,
+    quantity: quantity ?? this.quantity,
+    note: note ?? this.note,
+    createdAt: createdAt,
+    options: options,
+  );
 }

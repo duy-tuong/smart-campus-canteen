@@ -1,8 +1,4 @@
-import 'package:campus_canteen/app.dart';
 import 'package:campus_canteen/data/firebase/auth_service.dart';
-import 'package:campus_canteen/data/remote/api_client.dart';
-import 'package:campus_canteen/data/remote/user_api.dart';
-import 'package:campus_canteen/providers/auth_provider.dart';
 import 'package:campus_canteen/providers/settings_provider.dart';
 import 'package:campus_canteen/screens/auth/complete_profile_screen.dart';
 import 'package:campus_canteen/screens/auth/login_screen.dart';
@@ -11,44 +7,28 @@ import 'package:campus_canteen/screens/home/home_shell.dart';
 import 'package:campus_canteen/screens/staff/staff_shell.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../support/app_harness.dart';
 import '../support/fakes.dart';
 
 /// Luồng xác thực đầy đủ qua giao diện: AuthGate (authStateChanges) → Đăng nhập / Đăng ký /
 /// Hoàn tất hồ sơ / Bị khóa / Lỗi mạng → khung theo vai trò.
 void main() {
+  late AppHarness app;
   late SettingsProvider settings;
   late FakeAuthService auth;
   late FakeBackend backend;
 
   setUp(() async {
-    SharedPreferences.setMockInitialValues({});
-    settings = await SettingsProvider.load();
-    backend = FakeBackend()
-      ..addProfile(profileJson())
-      ..addProfile(profileJson(id: 'uid-staff', email: 'staff@smartcanteen.vn', fullName: 'Nhân viên', role: 'staff', studentCode: null))
-      ..addProfile(profileJson(id: 'uid-admin', email: 'admin@smartcanteen.vn', fullName: 'Quản trị', role: 'admin', studentCode: null));
+    app = await AppHarness.create();
+    settings = app.settings;
+    backend = app.backend;
   });
 
   Future<void> pumpApp(WidgetTester tester, {AuthUser? signedIn}) async {
-    tester.view.physicalSize = const Size(420, 1600);
-    tester.view.devicePixelRatio = 1;
-    addTearDown(tester.view.reset);
-
-    auth = FakeAuthService(signedIn: signedIn);
-    final ApiClient api = backend.client(auth: auth);
-    await tester.pumpWidget(MultiProvider(
-      providers: [
-        ChangeNotifierProvider.value(value: settings),
-        Provider.value(value: api),
-        Provider<AuthService>.value(value: auth),
-        ChangeNotifierProvider(create: (_) => AuthProvider(auth: auth, users: UserApi(api), api: api)),
-      ],
-      child: const CanteenApp(),
-    ));
-    await tester.pumpAndSettle();
+    await app.pump(tester, signedIn: signedIn);
+    auth = app.auth;
   }
 
   Finder field(String label) => find.widgetWithText(TextFormField, label);
@@ -56,6 +36,7 @@ void main() {
   Future<void> tapText(WidgetTester tester, String text, {Type? type}) async {
     final finder = type == null ? find.text(text) : find.widgetWithText(type, text);
     await tester.ensureVisible(finder.first);
+    await tester.pump(); // ensureVisible chỉ đổi vị trí cuộn — cần một khung hình để bố cục lại
     await tester.tap(finder.first);
     await tester.pumpAndSettle();
   }
@@ -188,7 +169,10 @@ void main() {
 
   group('Phiên đăng nhập', () {
     testWidgets('đã đăng nhập nhưng chưa có hồ sơ → Hoàn tất hồ sơ', (tester) async {
-      await pumpApp(tester, signedIn: const AuthUser(uid: 'uid-new', email: 'new@smartcanteen.vn'));
+      await pumpApp(
+        tester,
+        signedIn: const AuthUser(uid: 'uid-new', email: 'new@smartcanteen.vn'),
+      );
       expect(find.byType(CompleteProfileScreen), findsOneWidget);
       expect(find.text('new@smartcanteen.vn'), findsOneWidget);
 
@@ -200,7 +184,10 @@ void main() {
 
     testWidgets('tài khoản bị khóa → màn thông báo; Đăng xuất → về Đăng nhập', (tester) async {
       backend.locked.add('uid-sv01');
-      await pumpApp(tester, signedIn: const AuthUser(uid: 'uid-sv01', email: 'sv01@smartcanteen.vn'));
+      await pumpApp(
+        tester,
+        signedIn: const AuthUser(uid: 'uid-sv01', email: 'sv01@smartcanteen.vn'),
+      );
       expect(find.text('Tài khoản đã bị khóa'), findsOneWidget);
 
       await tapText(tester, 'Đăng xuất');
@@ -209,7 +196,10 @@ void main() {
 
     testWidgets('mất kết nối → màn lỗi; Thử lại khi có mạng → vào app', (tester) async {
       backend.offline = true;
-      await pumpApp(tester, signedIn: const AuthUser(uid: 'uid-sv01', email: 'sv01@smartcanteen.vn'));
+      await pumpApp(
+        tester,
+        signedIn: const AuthUser(uid: 'uid-sv01', email: 'sv01@smartcanteen.vn'),
+      );
       expect(find.text('Không có kết nối'), findsOneWidget);
 
       backend.offline = false;
@@ -218,7 +208,10 @@ void main() {
     });
 
     testWidgets('đăng xuất từ tab Tài khoản (có hỏi xác nhận)', (tester) async {
-      await pumpApp(tester, signedIn: const AuthUser(uid: 'uid-sv01', email: 'sv01@smartcanteen.vn'));
+      await pumpApp(
+        tester,
+        signedIn: const AuthUser(uid: 'uid-sv01', email: 'sv01@smartcanteen.vn'),
+      );
       await tapText(tester, 'Tài khoản');
       await tapText(tester, 'Đăng xuất', type: OutlinedButton);
       expect(find.text('Đăng xuất?'), findsOneWidget);
@@ -229,7 +222,10 @@ void main() {
     });
 
     testWidgets('đổi giao diện Tối ở tab Tài khoản và lưu lại', (tester) async {
-      await pumpApp(tester, signedIn: const AuthUser(uid: 'uid-sv01', email: 'sv01@smartcanteen.vn'));
+      await pumpApp(
+        tester,
+        signedIn: const AuthUser(uid: 'uid-sv01', email: 'sv01@smartcanteen.vn'),
+      );
       await tapText(tester, 'Tài khoản');
       await tapText(tester, 'Tối');
 

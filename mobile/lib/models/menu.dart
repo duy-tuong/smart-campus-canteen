@@ -13,14 +13,14 @@ class Category {
   });
 
   factory Category.fromJson(Map<String, dynamic> json) => Category(
-        id: (json['id'] as num).toInt(),
-        name: json['name'] as String,
-        description: json['description'] as String?,
-        icon: json['icon'] as String? ?? '',
-        sortOrder: (json['sortOrder'] as num?)?.toInt() ?? 0,
-        isActive: json['isActive'] as bool? ?? true,
-        foodCount: (json['foodCount'] as num?)?.toInt() ?? 0,
-      );
+    id: (json['id'] as num).toInt(),
+    name: json['name'] as String,
+    description: json['description'] as String?,
+    icon: json['icon'] as String? ?? '',
+    sortOrder: (json['sortOrder'] as num?)?.toInt() ?? 0,
+    isActive: json['isActive'] as bool? ?? true,
+    foodCount: (json['foodCount'] as num?)?.toInt() ?? 0,
+  );
 
   final int id;
   final String name;
@@ -53,21 +53,21 @@ class FoodSummary {
   });
 
   factory FoodSummary.fromJson(Map<String, dynamic> json) => FoodSummary(
-        id: (json['id'] as num).toInt(),
-        name: json['name'] as String,
-        price: (json['price'] as num).toInt(),
-        imageUrl: json['imageUrl'] as String?,
-        categoryId: (json['categoryId'] as num).toInt(),
-        categoryName: json['categoryName'] as String? ?? '',
-        prepTimeMinutes: (json['prepTimeMinutes'] as num?)?.toInt() ?? 0,
-        averageRating: (json['averageRating'] as num?)?.toDouble() ?? 0,
-        ratingCount: (json['ratingCount'] as num?)?.toInt() ?? 0,
-        isAvailable: json['isAvailable'] as bool? ?? true,
-        remainingToday: (json['remainingToday'] as num?)?.toInt(),
-        isSoldOut: json['isSoldOut'] as bool? ?? false,
-        hasOptions: json['hasOptions'] as bool? ?? false,
-        isFavorite: json['isFavorite'] as bool? ?? false,
-      );
+    id: (json['id'] as num).toInt(),
+    name: json['name'] as String,
+    price: (json['price'] as num).toInt(),
+    imageUrl: json['imageUrl'] as String?,
+    categoryId: (json['categoryId'] as num).toInt(),
+    categoryName: json['categoryName'] as String? ?? '',
+    prepTimeMinutes: (json['prepTimeMinutes'] as num?)?.toInt() ?? 0,
+    averageRating: (json['averageRating'] as num?)?.toDouble() ?? 0,
+    ratingCount: (json['ratingCount'] as num?)?.toInt() ?? 0,
+    isAvailable: json['isAvailable'] as bool? ?? true,
+    remainingToday: (json['remainingToday'] as num?)?.toInt(),
+    isSoldOut: json['isSoldOut'] as bool? ?? false,
+    hasOptions: json['hasOptions'] as bool? ?? false,
+    isFavorite: json['isFavorite'] as bool? ?? false,
+  );
 
   final int id;
   final String name;
@@ -89,21 +89,21 @@ class FoodSummary {
   final bool isFavorite;
 
   FoodSummary copyWith({bool? isFavorite}) => FoodSummary(
-        id: id,
-        name: name,
-        price: price,
-        imageUrl: imageUrl,
-        categoryId: categoryId,
-        categoryName: categoryName,
-        prepTimeMinutes: prepTimeMinutes,
-        averageRating: averageRating,
-        ratingCount: ratingCount,
-        isAvailable: isAvailable,
-        remainingToday: remainingToday,
-        isSoldOut: isSoldOut,
-        hasOptions: hasOptions,
-        isFavorite: isFavorite ?? this.isFavorite,
-      );
+    id: id,
+    name: name,
+    price: price,
+    imageUrl: imageUrl,
+    categoryId: categoryId,
+    categoryName: categoryName,
+    prepTimeMinutes: prepTimeMinutes,
+    averageRating: averageRating,
+    ratingCount: ratingCount,
+    isAvailable: isAvailable,
+    remainingToday: remainingToday,
+    isSoldOut: isSoldOut,
+    hasOptions: hasOptions,
+    isFavorite: isFavorite ?? this.isFavorite,
+  );
 }
 
 class FoodOption {
@@ -116,12 +116,12 @@ class FoodOption {
   });
 
   factory FoodOption.fromJson(Map<String, dynamic> json) => FoodOption(
-        id: (json['id'] as num).toInt(),
-        name: json['name'] as String,
-        extraPrice: (json['extraPrice'] as num?)?.toInt() ?? 0,
-        isAvailable: json['isAvailable'] as bool? ?? true,
-        sortOrder: (json['sortOrder'] as num?)?.toInt() ?? 0,
-      );
+    id: (json['id'] as num).toInt(),
+    name: json['name'] as String,
+    extraPrice: (json['extraPrice'] as num?)?.toInt() ?? 0,
+    isAvailable: json['isAvailable'] as bool? ?? true,
+    sortOrder: (json['sortOrder'] as num?)?.toInt() ?? 0,
+  );
 
   final int id;
   final String name;
@@ -143,17 +143,14 @@ class FoodOptionGroup {
   });
 
   factory FoodOptionGroup.fromJson(Map<String, dynamic> json) => FoodOptionGroup(
-        id: (json['id'] as num).toInt(),
-        name: json['name'] as String,
-        isRequired: json['isRequired'] as bool? ?? false,
-        minSelect: (json['minSelect'] as num?)?.toInt() ?? 0,
-        maxSelect: (json['maxSelect'] as num?)?.toInt() ?? 1,
-        sortOrder: (json['sortOrder'] as num?)?.toInt() ?? 0,
-        options: (json['options'] as List? ?? const [])
-            .whereType<Map<String, dynamic>>()
-            .map(FoodOption.fromJson)
-            .toList(),
-      );
+    id: (json['id'] as num).toInt(),
+    name: json['name'] as String,
+    isRequired: json['isRequired'] as bool? ?? false,
+    minSelect: (json['minSelect'] as num?)?.toInt() ?? 0,
+    maxSelect: (json['maxSelect'] as num?)?.toInt() ?? 1,
+    sortOrder: (json['sortOrder'] as num?)?.toInt() ?? 0,
+    options: (json['options'] as List? ?? const []).whereType<Map<String, dynamic>>().map(FoodOption.fromJson).toList(),
+  );
 
   final int id;
   final String name;
@@ -180,17 +177,17 @@ class FoodDetail {
   });
 
   factory FoodDetail.fromJson(Map<String, dynamic> json) => FoodDetail(
-        summary: FoodSummary.fromJson({...json, 'hasOptions': (json['optionGroups'] as List?)?.isNotEmpty ?? false}),
-        description: json['description'] as String? ?? '',
-        dailyLimit: (json['dailyLimit'] as num?)?.toInt(),
-        optionGroups: (json['optionGroups'] as List? ?? const [])
-            .whereType<Map<String, dynamic>>()
-            .map(FoodOptionGroup.fromJson)
-            .toList(),
-        rowVersion: json['rowVersion'] as String? ?? '',
-        createdAt: VnTime.parse(json['createdAt'] as String),
-        updatedAt: VnTime.parse(json['updatedAt'] as String),
-      );
+    summary: FoodSummary.fromJson({...json, 'hasOptions': (json['optionGroups'] as List?)?.isNotEmpty ?? false}),
+    description: json['description'] as String? ?? '',
+    dailyLimit: (json['dailyLimit'] as num?)?.toInt(),
+    optionGroups: (json['optionGroups'] as List? ?? const [])
+        .whereType<Map<String, dynamic>>()
+        .map(FoodOptionGroup.fromJson)
+        .toList(),
+    rowVersion: json['rowVersion'] as String? ?? '',
+    createdAt: VnTime.parse(json['createdAt'] as String),
+    updatedAt: VnTime.parse(json['updatedAt'] as String),
+  );
 
   final FoodSummary summary;
   final String description;

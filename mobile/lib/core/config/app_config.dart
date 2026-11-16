@@ -6,8 +6,7 @@
 /// Người dùng có thể đổi trong màn "Cài đặt máy chủ" (lưu lại, không cần build lại APK) —
 /// dùng khi cài APK lên điện thoại thật và gọi backend qua IP laptop trong cùng mạng Wi-Fi.
 abstract final class AppConfig {
-  static const String defaultApiBaseUrl =
-      String.fromEnvironment('API_BASE_URL', defaultValue: 'http://10.0.2.2:5265');
+  static const String defaultApiBaseUrl = String.fromEnvironment('API_BASE_URL', defaultValue: 'http://10.0.2.2:5265');
 
   /// Thời gian chờ tối đa cho một request REST.
   static const Duration requestTimeout = Duration(seconds: 20);

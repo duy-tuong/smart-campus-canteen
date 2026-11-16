@@ -87,16 +87,18 @@ class FirebaseAuthService implements AuthService {
 
   /// Mã lỗi của Firebase Auth → câu thông báo tiếng Việt.
   static AuthFailure failureFor(String code) => switch (code) {
-        'invalid-email' => AuthFailure(code, 'Email không đúng định dạng.', field: 'email'),
-        // Firebase gộp "sai mật khẩu" và "không có tài khoản" thành invalid-credential để chống dò email.
-        'invalid-credential' || 'wrong-password' || 'user-not-found' || 'INVALID_LOGIN_CREDENTIALS' =>
-          AuthFailure(code, 'Email hoặc mật khẩu không đúng.'),
-        'user-disabled' => AuthFailure(code, 'Tài khoản đã bị khóa. Vui lòng liên hệ quản trị viên căn-tin.'),
-        'email-already-in-use' => AuthFailure(code, 'Email này đã được đăng ký. Hãy đăng nhập.', field: 'email'),
-        'weak-password' => AuthFailure(code, 'Mật khẩu quá yếu (tối thiểu 6 ký tự).', field: 'password'),
-        'too-many-requests' => AuthFailure(code, 'Thử sai quá nhiều lần. Vui lòng đợi vài phút rồi thử lại.'),
-        'network-request-failed' => AuthFailure(code, 'Không có kết nối mạng. Kiểm tra Wi-Fi hoặc dữ liệu di động.'),
-        'operation-not-allowed' => AuthFailure(code, 'Đăng nhập bằng email chưa được bật trên Firebase.'),
-        _ => AuthFailure(code, 'Không thể xác thực ($code). Vui lòng thử lại.'),
-      };
+    'invalid-email' => AuthFailure(code, 'Email không đúng định dạng.', field: 'email'),
+    // Firebase gộp "sai mật khẩu" và "không có tài khoản" thành invalid-credential để chống dò email.
+    'invalid-credential' ||
+    'wrong-password' ||
+    'user-not-found' ||
+    'INVALID_LOGIN_CREDENTIALS' => AuthFailure(code, 'Email hoặc mật khẩu không đúng.'),
+    'user-disabled' => AuthFailure(code, 'Tài khoản đã bị khóa. Vui lòng liên hệ quản trị viên căn-tin.'),
+    'email-already-in-use' => AuthFailure(code, 'Email này đã được đăng ký. Hãy đăng nhập.', field: 'email'),
+    'weak-password' => AuthFailure(code, 'Mật khẩu quá yếu (tối thiểu 6 ký tự).', field: 'password'),
+    'too-many-requests' => AuthFailure(code, 'Thử sai quá nhiều lần. Vui lòng đợi vài phút rồi thử lại.'),
+    'network-request-failed' => AuthFailure(code, 'Không có kết nối mạng. Kiểm tra Wi-Fi hoặc dữ liệu di động.'),
+    'operation-not-allowed' => AuthFailure(code, 'Đăng nhập bằng email chưa được bật trên Firebase.'),
+    _ => AuthFailure(code, 'Không thể xác thực ($code). Vui lòng thử lại.'),
+  };
 }

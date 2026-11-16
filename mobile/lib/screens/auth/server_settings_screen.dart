@@ -109,49 +109,49 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
             maxWidth: 560,
             child: Form(
               key: _formKey,
-              child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-                Text('Địa chỉ backend', style: theme.textTheme.titleMedium),
-                const SizedBox(height: AppSpacing.xs),
-                Text(
-                  'App lấy thực đơn, đặt món và thanh toán qua máy chủ này.',
-                  style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant),
-                ),
-                const SizedBox(height: AppSpacing.md),
-                TextFormField(
-                  controller: _urlController,
-                  keyboardType: TextInputType.url,
-                  autocorrect: false,
-                  textInputAction: TextInputAction.done,
-                  validator: Validators.serverUrl,
-                  onFieldSubmitted: (_) => _testConnection(),
-                  decoration: const InputDecoration(
-                    labelText: 'Địa chỉ máy chủ',
-                    hintText: 'http://192.168.1.10:5265',
-                    prefixIcon: Icon(Icons.dns_outlined),
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.sm),
-                _CheckResult(state: _check),
-                const SizedBox(height: AppSpacing.md),
-                OutlinedButton.icon(
-                  onPressed: _check == _CheckState.checking ? null : _testConnection,
-                  icon: _check == _CheckState.checking
-                      ? const SizedBox.square(dimension: 18, child: CircularProgressIndicator(strokeWidth: 2))
-                      : const Icon(Icons.wifi_tethering_rounded),
-                  label: const Text('Kiểm tra kết nối'),
-                ),
-                const SizedBox(height: AppSpacing.sm),
-                FilledButton(
-                  onPressed: _check == _CheckState.checking ? null : _save,
-                  child: const Text('Lưu'),
-                ),
-                if (!isDefault) ...[
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text('Địa chỉ backend', style: theme.textTheme.titleMedium),
                   const SizedBox(height: AppSpacing.xs),
-                  TextButton(onPressed: _reset, child: const Text('Khôi phục mặc định')),
+                  Text(
+                    'App lấy thực đơn, đặt món và thanh toán qua máy chủ này.',
+                    style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  TextFormField(
+                    controller: _urlController,
+                    keyboardType: TextInputType.url,
+                    autocorrect: false,
+                    textInputAction: TextInputAction.done,
+                    validator: Validators.serverUrl,
+                    onFieldSubmitted: (_) => _testConnection(),
+                    decoration: const InputDecoration(
+                      labelText: 'Địa chỉ máy chủ',
+                      hintText: 'http://192.168.1.10:5265',
+                      prefixIcon: Icon(Icons.dns_outlined),
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  _CheckResult(state: _check),
+                  const SizedBox(height: AppSpacing.md),
+                  OutlinedButton.icon(
+                    onPressed: _check == _CheckState.checking ? null : _testConnection,
+                    icon: _check == _CheckState.checking
+                        ? const SizedBox.square(dimension: 18, child: CircularProgressIndicator(strokeWidth: 2))
+                        : const Icon(Icons.wifi_tethering_rounded),
+                    label: const Text('Kiểm tra kết nối'),
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  FilledButton(onPressed: _check == _CheckState.checking ? null : _save, child: const Text('Lưu')),
+                  if (!isDefault) ...[
+                    const SizedBox(height: AppSpacing.xs),
+                    TextButton(onPressed: _reset, child: const Text('Khôi phục mặc định')),
+                  ],
+                  const SizedBox(height: AppSpacing.xl),
+                  const _HelpCard(),
                 ],
-                const SizedBox(height: AppSpacing.xl),
-                const _HelpCard(),
-              ]),
+              ),
             ),
           ),
         ),
@@ -170,18 +170,27 @@ class _CheckResult extends StatelessWidget {
     final colors = context.appColors;
     final (IconData? icon, Color? color, String? text) = switch (state) {
       _CheckState.ok => (Icons.check_circle_rounded, colors.success, 'Kết nối thành công'),
-      _CheckState.failed => (Icons.error_rounded, colors.cancelled, 'Không kết nối được — kiểm tra địa chỉ, backend và Wi-Fi'),
+      _CheckState.failed => (
+        Icons.error_rounded,
+        colors.cancelled,
+        'Không kết nối được — kiểm tra địa chỉ, backend và Wi-Fi',
+      ),
       _ => (null, null, null),
     };
     return AnimatedSwitcher(
       duration: AppDurations.normal,
       child: icon == null
           ? const SizedBox(key: ValueKey('none'), height: 20)
-          : Row(key: ValueKey(state), children: [
-              Icon(icon, size: 20, color: color),
-              const SizedBox(width: AppSpacing.xs),
-              Expanded(child: Text(text!, style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: color))),
-            ]),
+          : Row(
+              key: ValueKey(state),
+              children: [
+                Icon(icon, size: 20, color: color),
+                const SizedBox(width: AppSpacing.xs),
+                Expanded(
+                  child: Text(text!, style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: color)),
+                ),
+              ],
+            ),
     );
   }
 }
@@ -194,20 +203,30 @@ class _HelpCard extends StatelessWidget {
     final theme = Theme.of(context);
     final muted = theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant);
     Widget row(IconData icon, String title, String body) => ListTile(
-          contentPadding: EdgeInsets.zero,
-          leading: Icon(icon, color: theme.colorScheme.primary),
-          title: Text(title),
-          subtitle: Text(body, style: muted),
-        );
+      contentPadding: EdgeInsets.zero,
+      leading: Icon(icon, color: theme.colorScheme.primary),
+      title: Text(title),
+      subtitle: Text(body, style: muted),
+    );
     return Card(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md, vertical: AppSpacing.xs),
-        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          row(Icons.phone_android_rounded, 'Máy ảo Android', 'http://10.0.2.2:5265 — trỏ về máy tính đang chạy backend.'),
-          row(Icons.wifi_rounded, 'Điện thoại thật',
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            row(
+              Icons.phone_android_rounded,
+              'Máy ảo Android',
+              'http://10.0.2.2:5265 — trỏ về máy tính đang chạy backend.',
+            ),
+            row(
+              Icons.wifi_rounded,
+              'Điện thoại thật',
               'Dùng IP Wi-Fi của laptop (xem bằng lệnh ipconfig), ví dụ http://192.168.1.10:5265. '
-                  'Điện thoại và laptop phải chung mạng, tường lửa Windows mở cổng 5265.'),
-        ]),
+                  'Điện thoại và laptop phải chung mạng, tường lửa Windows mở cổng 5265.',
+            ),
+          ],
+        ),
       ),
     );
   }

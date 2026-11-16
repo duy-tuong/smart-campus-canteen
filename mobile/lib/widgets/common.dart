@@ -25,12 +25,12 @@ class StatusChip extends StatelessWidget {
   }
 
   static IconData iconOf(OrderStatus status) => switch (status) {
-        OrderStatus.received => Icons.receipt_long_rounded,
-        OrderStatus.cooking => Icons.local_fire_department_rounded,
-        OrderStatus.ready => Icons.notifications_active_rounded,
-        OrderStatus.completed => Icons.check_circle_rounded,
-        OrderStatus.cancelled => Icons.cancel_rounded,
-      };
+    OrderStatus.received => Icons.receipt_long_rounded,
+    OrderStatus.cooking => Icons.local_fire_department_rounded,
+    OrderStatus.ready => Icons.notifications_active_rounded,
+    OrderStatus.completed => Icons.check_circle_rounded,
+    OrderStatus.cancelled => Icons.cancel_rounded,
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -38,12 +38,17 @@ class StatusChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs, vertical: AppSpacing.xxs),
       decoration: BoxDecoration(color: color.withValues(alpha: 0.12), borderRadius: AppRadius.smAll),
-      child: Row(mainAxisSize: MainAxisSize.min, children: [
-        Icon(iconOf(status), size: 14, color: color),
-        const SizedBox(width: AppSpacing.xxs),
-        Text(status.label,
-            style: Theme.of(context).textTheme.labelSmall?.copyWith(color: color, fontWeight: FontWeight.w600)),
-      ]),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(iconOf(status), size: 14, color: color),
+          const SizedBox(width: AppSpacing.xxs),
+          Text(
+            status.label,
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(color: color, fontWeight: FontWeight.w600),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -61,18 +66,27 @@ class PriceText extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final base = (style ?? theme.textTheme.titleSmall ?? const TextStyle()).tabular;
-    final main = Text(Money.format(amount),
-        style: base.copyWith(color: color ?? context.appColors.price, fontWeight: FontWeight.w600));
+    final main = Text(
+      Money.format(amount),
+      style: base.copyWith(color: color ?? context.appColors.price, fontWeight: FontWeight.w600),
+    );
     if (originalAmount == null || originalAmount! <= amount) return main;
-    return Row(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.baseline, textBaseline: TextBaseline.alphabetic, children: [
-      main,
-      const SizedBox(width: AppSpacing.xs),
-      Text(Money.format(originalAmount!),
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.baseline,
+      textBaseline: TextBaseline.alphabetic,
+      children: [
+        main,
+        const SizedBox(width: AppSpacing.xs),
+        Text(
+          Money.format(originalAmount!),
           style: theme.textTheme.bodySmall?.tabular.copyWith(
             color: theme.colorScheme.onSurfaceVariant,
             decoration: TextDecoration.lineThrough,
-          )),
-    ]);
+          ),
+        ),
+      ],
+    );
   }
 }
 
@@ -87,17 +101,27 @@ class SectionHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Padding(
-        padding: padding,
-        child: Row(children: [
-          Expanded(child: Text(title, style: Theme.of(context).textTheme.titleMedium)),
-          if (actionLabel != null) TextButton(onPressed: onAction, child: Text(actionLabel!)),
-        ]),
-      );
+    padding: padding,
+    child: Row(
+      children: [
+        Expanded(child: Text(title, style: Theme.of(context).textTheme.titleMedium)),
+        if (actionLabel != null) TextButton(onPressed: onAction, child: Text(actionLabel!)),
+      ],
+    ),
+  );
 }
 
 /// Ảnh từ mạng có cache; không có ảnh / lỗi tải → ô nền cam nhạt với biểu tượng món ăn.
 class AppNetworkImage extends StatelessWidget {
-  const AppNetworkImage(this.url, {super.key, this.width, this.height, this.borderRadius, this.fit = BoxFit.cover, this.icon = Icons.restaurant_rounded});
+  const AppNetworkImage(
+    this.url, {
+    super.key,
+    this.width,
+    this.height,
+    this.borderRadius,
+    this.fit = BoxFit.cover,
+    this.icon = Icons.restaurant_rounded,
+  });
 
   final String? url;
   final double? width;
@@ -133,16 +157,16 @@ class _Placeholder extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-        width: width,
-        height: height,
-        color: context.appColors.subtleBrand,
-        alignment: Alignment.center,
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            final side = constraints.biggest.shortestSide;
-            final size = side.isFinite ? (side * 0.4).clamp(16.0, 56.0) : 32.0;
-            return Icon(icon, size: size, color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.5));
-          },
-        ),
-      );
+    width: width,
+    height: height,
+    color: context.appColors.subtleBrand,
+    alignment: Alignment.center,
+    child: LayoutBuilder(
+      builder: (context, constraints) {
+        final side = constraints.biggest.shortestSide;
+        final size = side.isFinite ? (side * 0.4).clamp(16.0, 56.0) : 32.0;
+        return Icon(icon, size: size, color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.5));
+      },
+    ),
+  );
 }
