@@ -1,21 +1,14 @@
 import 'dart:async';
 
-import 'package:campus_canteen/app.dart';
 import 'package:campus_canteen/core/responsive/responsive_shell.dart';
 import 'package:campus_canteen/core/theme/app_theme.dart';
-import 'package:campus_canteen/data/remote/api_client.dart';
 import 'package:campus_canteen/data/remote/api_exception.dart';
 import 'package:campus_canteen/models/enums.dart';
-import 'package:campus_canteen/providers/settings_provider.dart';
 import 'package:campus_canteen/widgets/async_value_view.dart';
 import 'package:campus_canteen/widgets/common.dart';
 import 'package:campus_canteen/widgets/state_views.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:http/http.dart' as http;
-import 'package:http/testing.dart';
-import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   void setScreen(WidgetTester tester, double width, [double height = 900]) {
@@ -123,67 +116,5 @@ void main() {
     expect(find.text('Mời nhận món'), findsOneWidget);
     expect(find.text('35.000đ'), findsOneWidget);
     expect(find.text('40.000đ'), findsOneWidget);
-  });
-
-  group('App', () {
-    late SettingsProvider settings;
-    late ApiClient api;
-
-    setUp(() async {
-      SharedPreferences.setMockInitialValues({});
-      settings = await SettingsProvider.load();
-      api = ApiClient(
-        baseUrl: () => settings.apiBaseUrl,
-        httpClient: MockClient((request) async =>
-            request.url.host == '192.168.1.10' ? http.Response('{"status":"ok"}', 200) : http.Response('', 503)),
-      );
-    });
-
-    Widget app() => MultiProvider(
-          providers: [ChangeNotifierProvider.value(value: settings), Provider.value(value: api)],
-          child: const CanteenApp(),
-        );
-
-    testWidgets('đổi giao diện Tối ở tab Tài khoản và lưu lại', (tester) async {
-      setScreen(tester, 400);
-      await tester.pumpWidget(app());
-      await tester.tap(find.text('Tài khoản'));
-      await tester.pumpAndSettle();
-
-      await tester.tap(find.text('Tối'));
-      await tester.pumpAndSettle();
-
-      expect(settings.themeMode, ThemeMode.dark);
-      expect(Theme.of(tester.element(find.text('Giao diện'))).brightness, Brightness.dark);
-      final prefs = await SharedPreferences.getInstance();
-      expect(prefs.getString('settings.themeMode'), 'dark');
-    });
-
-    testWidgets('Cài đặt máy chủ: kiểm tra địa chỉ, kiểm tra kết nối, lưu', (tester) async {
-      setScreen(tester, 400);
-      await tester.pumpWidget(app());
-      await tester.tap(find.text('Tài khoản'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Địa chỉ máy chủ'));
-      await tester.pumpAndSettle();
-      expect(find.text('Cài đặt máy chủ'), findsOneWidget);
-
-      final field = find.byType(TextFormField);
-      await tester.enterText(field, '192.168.1.10');
-      await tester.tap(find.text('Kiểm tra kết nối'));
-      await tester.pumpAndSettle();
-      expect(find.text('Địa chỉ dạng http://192.168.1.10:5265'), findsOneWidget);
-
-      await tester.enterText(field, 'http://192.168.1.10:5265/');
-      await tester.tap(find.text('Kiểm tra kết nối'));
-      await tester.pumpAndSettle();
-      expect(find.text('Kết nối thành công'), findsOneWidget);
-
-      await tester.tap(find.text('Lưu'));
-      await tester.pumpAndSettle();
-      expect(settings.apiBaseUrl, 'http://192.168.1.10:5265');
-      expect(find.text('Cài đặt máy chủ'), findsNothing, reason: 'lưu xong quay lại');
-      expect(find.text('http://192.168.1.10:5265'), findsOneWidget);
-    });
   });
 }

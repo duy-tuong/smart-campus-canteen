@@ -112,4 +112,6 @@ abstract final class ApiErrorCodes {
   static const concurrencyConflict = 'CONCURRENCY_CONFLICT';
   static const validationError = 'VALIDATION_ERROR';
   static const orderItemsInvalid = 'ORDER_ITEMS_INVALID';
+  static const studentCodeTaken = 'STUDENT_CODE_TAKEN';
+  static const studentCodeLocked = 'STUDENT_CODE_LOCKED';
 }
