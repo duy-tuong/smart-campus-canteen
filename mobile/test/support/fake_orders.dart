@@ -17,7 +17,8 @@ mixin FakeOrdering {
 
   /// Đơn đã tạo theo Idempotency-Key (gửi lại cùng key → trả lại đơn cũ).
   final Map<String, Map<String, Object?>> ordersByKey = {};
-  final Map<String, Map<String, Object?>> orders = {};
+  Map<String, Map<String, Object?>> get orders => _orders;
+  final Map<String, Map<String, Object?>> _orders = {};
   final List<Map<String, dynamic>> createdBodies = [];
   final List<String> idempotencyKeys = [];
 

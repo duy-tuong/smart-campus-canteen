@@ -91,3 +91,50 @@ class FoodReviewPage {
   final ReviewSummary summary;
   final PagedResult<Review> reviews;
 }
+
+/// Một món trong màn "Đánh giá đơn hàng" kèm đánh giá tôi đã viết (nếu có).
+class OrderReviewItem {
+  const OrderReviewItem({
+    required this.foodId,
+    required this.foodName,
+    required this.quantity,
+    this.imageUrl,
+    this.myReview,
+  });
+
+  factory OrderReviewItem.fromJson(Map<String, dynamic> json) => OrderReviewItem(
+    foodId: (json['foodId'] as num).toInt(),
+    foodName: json['foodName'] as String? ?? '',
+    imageUrl: json['imageUrl'] as String?,
+    quantity: (json['quantity'] as num?)?.toInt() ?? 1,
+    myReview: json['myReview'] is Map<String, dynamic>
+        ? Review.fromJson(json['myReview'] as Map<String, dynamic>)
+        : null,
+  );
+
+  final int foodId;
+  final String foodName;
+  final String? imageUrl;
+  final int quantity;
+  final Review? myReview;
+}
+
+/// GET /api/orders/{id}/reviews — đơn đã hoàn thành và còn trong hạn thì [canReview].
+class OrderReviews {
+  const OrderReviews({required this.orderId, required this.canReview, required this.items, this.reviewDeadline});
+
+  factory OrderReviews.fromJson(Map<String, dynamic> json) => OrderReviews(
+    orderId: json['orderId'] as String? ?? '',
+    canReview: json['canReview'] as bool? ?? false,
+    reviewDeadline: VnTime.tryParse(json['reviewDeadline'] as String?),
+    items: (json['items'] as List? ?? const [])
+        .whereType<Map<String, dynamic>>()
+        .map(OrderReviewItem.fromJson)
+        .toList(),
+  );
+
+  final String orderId;
+  final bool canReview;
+  final DateTime? reviewDeadline;
+  final List<OrderReviewItem> items;
+}

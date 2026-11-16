@@ -13,6 +13,9 @@ import '../../screens/menu/favorites_screen.dart';
 import '../../screens/menu/food_detail_screen.dart';
 import '../../screens/menu/search_screen.dart';
 import '../../screens/orders/order_screen.dart';
+import '../../screens/profile/edit_profile_screen.dart';
+import '../../screens/reviews/my_reviews_screen.dart';
+import '../../screens/reviews/review_order_screen.dart';
 import '../../widgets/state_views.dart';
 
 /// Tên route và bảng điều hướng của app.
@@ -42,6 +45,11 @@ abstract final class AppRoutes {
   /// Theo dõi / chi tiết đơn — arguments: id đơn (String).
   static const order = '/order';
 
+  /// Đánh giá các món trong đơn — arguments: id đơn (String).
+  static const reviewOrder = '/order/review';
+  static const myReviews = '/reviews/me';
+  static const editProfile = '/profile/edit';
+
   static Map<String, WidgetBuilder> get routes => {
     home: (_) => const AuthGate(),
     register: (_) => const RegisterScreen(),
@@ -49,6 +57,8 @@ abstract final class AppRoutes {
     search: (_) => const SearchScreen(),
     favorites: (_) => const FavoritesScreen(),
     checkout: (_) => const CheckoutScreen(),
+    myReviews: (_) => const MyReviewsScreen(),
+    editProfile: (_) => const EditProfileScreen(),
   };
 
   /// Route có tham số.
@@ -72,6 +82,10 @@ abstract final class AppRoutes {
     order => MaterialPageRoute(
       settings: settings,
       builder: (_) => OrderScreen(orderId: settings.arguments! as String),
+    ),
+    reviewOrder => MaterialPageRoute(
+      settings: settings,
+      builder: (_) => ReviewOrderScreen(orderId: settings.arguments! as String),
     ),
     orderPlaced => MaterialPageRoute(
       settings: settings,

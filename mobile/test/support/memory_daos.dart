@@ -176,9 +176,7 @@ class MemoryOrderDao implements OrderDao {
   @override
   Future<List<LocalOrder>> getOrders(String userId, {Set<OrderStatus>? statuses, int? limit, int offset = 0}) async {
     final list =
-        rows.values
-            .where((o) => o.userId == userId && (statuses == null || statuses.contains(o.status)))
-            .toList()
+        rows.values.where((o) => o.userId == userId && (statuses == null || statuses.contains(o.status))).toList()
           ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
     return list.skip(offset).take(limit ?? list.length).toList();
   }

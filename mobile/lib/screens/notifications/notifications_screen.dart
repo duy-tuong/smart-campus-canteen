@@ -47,6 +47,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     }
     if (n.type == NotificationType.orderStatus && n.refId != null) {
       await Navigator.pushNamed(context, AppRoutes.order, arguments: n.refId);
+    } else if (n.type == NotificationType.review) {
+      await Navigator.pushNamed(context, AppRoutes.myReviews); // căn-tin trả lời đánh giá
     }
   }
 

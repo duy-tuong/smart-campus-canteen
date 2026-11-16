@@ -73,7 +73,11 @@ void main() {
       backend = FakeBackend();
       dao = MemoryOrderDao();
       realtime = FakeRealtimeService();
-      final api = OrderApi(backend.client(auth: FakeAuthService(signedIn: const AuthUser(uid: 'uid-sv01'))));
+      final api = OrderApi(
+        backend.client(
+          auth: FakeAuthService(signedIn: const AuthUser(uid: 'uid-sv01')),
+        ),
+      );
       provider = OrdersProvider(api: api, dao: dao, realtime: realtime);
     });
 

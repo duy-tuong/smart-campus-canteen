@@ -7,6 +7,7 @@ import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 
 import 'fake_orders.dart';
+import 'fake_reviews.dart';
 
 /// Firebase Auth giả: giữ người dùng trong bộ nhớ, phát sự kiện như authStateChanges() thật.
 class FakeAuthService implements AuthService {
@@ -99,7 +100,8 @@ http.Response problem(int status, String code, String detail, {Map<String, List<
     jsonResponse({'status': status, 'title': detail, 'detail': detail, 'code': code, 'errors': ?errors}, status);
 
 /// Backend giả cho /api/users/me: hồ sơ lưu theo uid (lấy từ token dạng `token-{uid}`).
-class FakeBackend with FakeOrdering {
+class FakeBackend with FakeOrdering, FakeReviewing {
+  @override
   final Map<String, Map<String, Object?>> profiles = {};
   final Set<String> locked = {};
 
@@ -148,6 +150,8 @@ class FakeBackend with FakeOrdering {
       profiles[token] = profile;
       return jsonResponse(profile, 201);
     }
+    final reviewResponse = handleReviewing(request, token);
+    if (reviewResponse != null) return reviewResponse;
     final orderResponse = handleOrdering(request, token);
     if (orderResponse != null) return orderResponse;
     final menuResponse = _menu(request);

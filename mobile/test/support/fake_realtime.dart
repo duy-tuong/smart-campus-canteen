@@ -75,12 +75,17 @@ OrderLive liveOrder(
   'updatedAt': DateTime.utc(2026, 11, 16, 3, 5).millisecondsSinceEpoch,
 });
 
-AppNotification notification(int id, {bool isRead = false, String? orderId, String title = 'Món đã sẵn sàng'}) =>
-    AppNotification.fromRtdb('n$id', {
-      'title': title,
-      'body': 'Đơn #A001 — mời bạn đến quầy nhận món.',
-      'type': orderId == null ? 'promotion' : 'orderStatus',
-      'refId': orderId,
-      'isRead': isRead,
-      'createdAt': DateTime.utc(2026, 11, 16, 3, id).millisecondsSinceEpoch,
-    });
+AppNotification notification(
+  int id, {
+  bool isRead = false,
+  String? orderId,
+  String title = 'Món đã sẵn sàng',
+  String? type,
+}) => AppNotification.fromRtdb('n$id', {
+  'title': title,
+  'body': 'Đơn #A001 — mời bạn đến quầy nhận món.',
+  'type': type ?? (orderId == null ? 'promotion' : 'orderStatus'),
+  'refId': orderId,
+  'isRead': isRead,
+  'createdAt': DateTime.utc(2026, 11, 16, 3, id).millisecondsSinceEpoch,
+});

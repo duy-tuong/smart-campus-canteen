@@ -30,4 +30,11 @@ class UserApi {
       );
 
   static String? _optional(String? value) => (value == null || value.trim().isEmpty) ? null : value.trim();
+
+  /// Tải ảnh đại diện (JPEG/PNG/WebP, tối đa 2 MB) — trả về hồ sơ có avatarUrl mới.
+  Future<UserProfile> uploadAvatar(List<int> bytes, String fileName) async => UserProfile.fromJson(
+    await _api.upload('/api/users/me/avatar', bytes: bytes, fileName: fileName) as Map<String, dynamic>,
+  );
+
+  Future<void> removeAvatar() => _api.delete('/api/users/me/avatar');
 }

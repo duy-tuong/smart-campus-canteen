@@ -123,6 +123,7 @@ class _OrderScreenState extends State<OrderScreen> {
   late Future<OrderView> _future;
   late final Stream<OrderLive?> _live;
   StreamSubscription<OrderLive?>? _liveSub;
+
   /// Trạng thái đã biết (từ lần tải gần nhất / sự kiện realtime trước) — để nhận ra thay đổi THẬT.
   OrderStatus? _knownStatus;
   PaymentStatus? _knownPayment;
@@ -330,9 +331,16 @@ class _OrderBody extends StatelessWidget {
             icon: const Icon(Icons.qr_code_2_rounded),
             label: const Text('Thanh toán ngay'),
           ),
+        if (status == OrderStatus.completed && !view.isOffline) ...[
+          FilledButton.icon(
+            onPressed: () => Navigator.pushNamed(context, AppRoutes.reviewOrder, arguments: view.id),
+            icon: const Icon(Icons.star_rate_rounded),
+            label: const Text('Đánh giá món'),
+          ),
+        ],
         if (finished && view.items.isNotEmpty) ...[
           const SizedBox(height: AppSpacing.xs),
-          FilledButton.icon(
+          (status == OrderStatus.completed ? OutlinedButton.icon : FilledButton.icon)(
             onPressed: busy ? null : onReorder,
             icon: const Icon(Icons.replay_rounded),
             label: const Text('Đặt lại'),

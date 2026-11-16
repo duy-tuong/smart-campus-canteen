@@ -46,6 +46,21 @@ class AccountScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 if (profile != null) _ProfileHeader(profile),
+                if (profile != null && !profile.role.isStaffOrAdmin) ...[
+                  const SizedBox(height: AppSpacing.md),
+                  ListTile(
+                    leading: const Icon(Icons.favorite_border_rounded),
+                    title: const Text('Món yêu thích'),
+                    trailing: const Icon(Icons.chevron_right_rounded),
+                    onTap: () => Navigator.pushNamed(context, AppRoutes.favorites),
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.rate_review_outlined),
+                    title: const Text('Đánh giá của tôi'),
+                    trailing: const Icon(Icons.chevron_right_rounded),
+                    onTap: () => Navigator.pushNamed(context, AppRoutes.myReviews),
+                  ),
+                ],
                 const SizedBox(height: AppSpacing.lg),
                 const SectionHeader('Giao diện'),
                 const SizedBox(height: AppSpacing.xs),
@@ -108,37 +123,41 @@ class _ProfileHeader extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.xs, AppSpacing.md, 0),
       child: Card(
-        child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.md),
-          child: Row(
-            children: [
-              UserAvatar(profile: profile, size: 64),
-              const SizedBox(width: AppSpacing.md),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      profile.fullName,
-                      style: theme.textTheme.titleMedium,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: AppSpacing.xxs),
-                    Text(profile.email, style: muted, maxLines: 1, overflow: TextOverflow.ellipsis),
-                    const SizedBox(height: AppSpacing.xs),
-                    Wrap(
-                      spacing: AppSpacing.xs,
-                      runSpacing: AppSpacing.xxs,
-                      children: [
-                        _Tag(icon: Icons.verified_user_outlined, text: profile.role.label),
-                        if (profile.studentCode != null) _Tag(icon: Icons.school_outlined, text: profile.studentCode!),
-                      ],
-                    ),
-                  ],
+        child: InkWell(
+          onTap: () => Navigator.pushNamed(context, AppRoutes.editProfile),
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            child: Row(
+              children: [
+                UserAvatar(profile: profile, size: 64),
+                const SizedBox(width: AppSpacing.md),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        profile.fullName,
+                        style: theme.textTheme.titleMedium,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: AppSpacing.xxs),
+                      Text(profile.email, style: muted, maxLines: 1, overflow: TextOverflow.ellipsis),
+                      const SizedBox(height: AppSpacing.xs),
+                      Wrap(
+                        spacing: AppSpacing.xs,
+                        runSpacing: AppSpacing.xxs,
+                        children: [
+                          _Tag(icon: Icons.verified_user_outlined, text: profile.role.label),
+                          if (profile.studentCode != null)
+                            _Tag(icon: Icons.school_outlined, text: profile.studentCode!),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

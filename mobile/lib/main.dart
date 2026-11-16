@@ -12,6 +12,7 @@ import 'data/local/cart_dao.dart';
 import 'data/local/database_helper.dart';
 import 'data/local/order_dao.dart';
 import 'data/local/search_history_dao.dart';
+import 'data/device/image_source_service.dart';
 import 'data/firebase/auth_service.dart';
 import 'data/firebase/realtime_service.dart';
 import 'data/remote/api_client.dart';
@@ -52,6 +53,7 @@ Future<void> main() async {
           api: api,
           auth: authService,
           realtime: FirebaseRealtimeService(rtdb),
+          images: DeviceImageSource(),
           cartDao: CartDao(database),
           orderDao: OrderDao(database),
           searchHistoryDao: SearchHistoryDao(database),

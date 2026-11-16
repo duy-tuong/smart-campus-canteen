@@ -298,3 +298,53 @@ class _Badge extends StatelessWidget {
     child: Text(text, style: Theme.of(context).textTheme.labelMedium?.copyWith(color: Colors.white)),
   );
 }
+
+/// Chọn số sao (1–5): mỗi sao là một vùng chạm 48px, kèm nhãn chữ để rõ nghĩa ("Ngon", "Tuyệt vời"...).
+class StarRatingInput extends StatelessWidget {
+  const StarRatingInput({super.key, required this.value, required this.onChanged, this.enabled = true});
+
+  final int value;
+  final ValueChanged<int> onChanged;
+  final bool enabled;
+
+  static const labels = ['Chọn số sao', 'Tệ', 'Chưa ngon', 'Tạm được', 'Ngon', 'Tuyệt vời'];
+
+  @override
+  Widget build(BuildContext context) {
+    final color = context.appColors.rating;
+    final theme = Theme.of(context);
+    return Row(
+      children: [
+        for (var star = 1; star <= 5; star++)
+          SizedBox.square(
+            dimension: kMinTapTarget,
+            child: IconButton(
+              tooltip: '$star sao',
+              padding: EdgeInsets.zero,
+              onPressed: enabled ? () => onChanged(star) : null,
+              icon: AnimatedScale(
+                scale: star == value ? 1.2 : 1,
+                duration: AppDurations.fast,
+                child: Icon(
+                  star <= value ? Icons.star_rounded : Icons.star_outline_rounded,
+                  size: 32,
+                  color: star <= value ? color : theme.colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ),
+          ),
+        const SizedBox(width: AppSpacing.xs),
+        Flexible(
+          child: Text(
+            labels[value.clamp(0, 5)],
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: value == 0 ? theme.colorScheme.onSurfaceVariant : color,
+              fontWeight: value == 0 ? null : FontWeight.w600,
+            ),
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+      ],
+    );
+  }
+}

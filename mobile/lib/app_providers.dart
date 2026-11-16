@@ -1,6 +1,7 @@
 import 'package:provider/provider.dart';
 import 'package:provider/single_child_widget.dart';
 
+import 'data/device/image_source_service.dart';
 import 'data/firebase/auth_service.dart';
 import 'data/firebase/realtime_service.dart';
 import 'data/local/cart_dao.dart';
@@ -10,6 +11,7 @@ import 'data/remote/api_client.dart';
 import 'data/remote/menu_api.dart';
 import 'data/remote/notification_api.dart';
 import 'data/remote/order_api.dart';
+import 'data/remote/review_api.dart';
 import 'data/remote/user_api.dart';
 import 'providers/auth_provider.dart';
 import 'providers/cart_provider.dart';
@@ -27,6 +29,7 @@ List<SingleChildWidget> buildAppProviders({
   required ApiClient api,
   required AuthService auth,
   required RealtimeService realtime,
+  required ImageSourceService images,
   required CartDao cartDao,
   required OrderDao orderDao,
   SearchHistoryDao? searchHistoryDao,
@@ -48,6 +51,8 @@ List<SingleChildWidget> buildAppProviders({
     Provider.value(value: orderDao),
     Provider.value(value: orderApi),
     Provider.value(value: realtime),
+    Provider.value(value: images),
+    Provider.value(value: ReviewApi(api)),
     Provider.value(value: NotificationApi(api)),
     if (searchHistoryDao != null) Provider.value(value: searchHistoryDao),
     ChangeNotifierProvider(

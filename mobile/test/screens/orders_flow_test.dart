@@ -170,10 +170,7 @@ void main() {
   group('Thông báo', () {
     testWidgets('badge số chưa đọc; chạm → đánh dấu đã đọc + mở đúng đơn; Đọc tất cả', (tester) async {
       app.backend.seedOrder(status: 'ready');
-      app.realtime.notifications = [
-        notification(2, orderId: 'order-1'),
-        notification(1, title: 'Giảm 10% hôm nay'),
-      ];
+      app.realtime.notifications = [notification(2, orderId: 'order-1'), notification(1, title: 'Giảm 10% hôm nay')];
       await pumpApp(tester);
       expect(find.descendant(of: find.byType(NavigationBar), matching: find.text('2')), findsOneWidget);
 
@@ -205,7 +202,9 @@ void main() {
     });
   });
 
-  testWidgets('thanh toán QR: Firebase báo đã nhận tiền → tự chuyển sang màn thành công (không cần bấm)', (tester) async {
+  testWidgets('thanh toán QR: Firebase báo đã nhận tiền → tự chuyển sang màn thành công (không cần bấm)', (
+    tester,
+  ) async {
     await app.cartDao.add(
       CartItem(
         userId: 'uid-sv01',

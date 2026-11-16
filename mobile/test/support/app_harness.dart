@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'fake_realtime.dart';
+import 'fake_reviews.dart';
 import 'fakes.dart';
 import 'memory_daos.dart';
 
@@ -22,6 +23,7 @@ class AppHarness {
   final searchHistory = MemorySearchHistoryDao();
   final orderDao = MemoryOrderDao();
   final realtime = FakeRealtimeService();
+  final images = FakeImageSource();
 
   static const student = AuthUser(uid: 'uid-sv01', email: 'sv01@smartcanteen.vn');
 
@@ -64,6 +66,7 @@ class AppHarness {
           api: backend.client(auth: auth),
           auth: auth,
           realtime: realtime,
+          images: images,
           cartDao: cartDao,
           orderDao: orderDao,
           searchHistoryDao: searchHistory,

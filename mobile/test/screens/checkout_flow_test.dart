@@ -68,7 +68,10 @@ void main() {
     });
 
     testWidgets('hiển thị món + tùy chọn, tạm tính; tăng số lượng; vuốt xóa rồi Hoàn tác', (tester) async {
-      await pumpWithCart(tester, [line(2, 'Trà sữa trân châu', 25000, options: const [sizeL]), line(4, 'Món số 4', 20400)]);
+      await pumpWithCart(tester, [
+        line(2, 'Trà sữa trân châu', 25000, options: const [sizeL]),
+        line(4, 'Món số 4', 20400),
+      ]);
       await openCart(tester);
       expect(find.byType(CartScreen), findsOneWidget);
       expect(find.text('Giỏ hàng (2)'), findsOneWidget);
@@ -102,7 +105,9 @@ void main() {
     testWidgets('tiền mặt: báo giá từ máy chủ → Đặt món → màn thành công có mã nhận món; giỏ trống, hóa đơn lưu máy', (
       tester,
     ) async {
-      await pumpWithCart(tester, [line(2, 'Trà sữa trân châu', 25000, quantity: 2, options: const [sizeL])]);
+      await pumpWithCart(tester, [
+        line(2, 'Trà sữa trân châu', 25000, quantity: 2, options: const [sizeL]),
+      ]);
       await openCheckout(tester);
 
       expect(find.text('2 × Trà sữa trân châu'), findsOneWidget);
