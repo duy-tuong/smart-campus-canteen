@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
 
 import '../data/firebase/auth_service.dart';
 import '../data/remote/api_client.dart';
@@ -35,6 +35,9 @@ enum AuthStatus {
 
   /// Không tải được hồ sơ (mất mạng, sai địa chỉ máy chủ...) → màn lỗi có nút Thử lại.
   error,
+
+  /// Đang đăng xuất: đóng các màn hình (hủy mọi listener Firebase) TRƯỚC khi đăng xuất thật.
+  signingOut,
 
   /// Đã có hồ sơ — vào app theo vai trò.
   ready,
@@ -194,7 +197,26 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> signOut() => _auth.signOut();
+  /// Đăng xuất an toàn với Realtime Database: Firebase thu hồi quyền đọc NGAY khi đăng xuất, nên nếu
+  /// màn hình còn nghe `orders/...` / `notifications/...` thì plugin ném permission-denied không ai bắt.
+  /// → Chuyển sang [AuthStatus.signingOut] (AuthGate đóng các màn, provider hủy listener), đợi khung hình đó
+  /// vẽ xong, rồi mới đăng xuất Firebase.
+  Future<void> signOut() async {
+    if (_user != null && _status != AuthStatus.signingOut) {
+      _generation++;
+      _set(AuthStatus.signingOut);
+      await _nextFrame();
+    }
+    await _auth.signOut();
+  }
+
+  static Future<void> _nextFrame() async {
+    try {
+      await WidgetsBinding.instance.endOfFrame.timeout(const Duration(milliseconds: 500));
+    } catch (_) {
+      // Không có giao diện (unit test) hoặc quá thời gian → đăng xuất luôn.
+    }
+  }
 
   void _set(AuthStatus status) {
     _status = status;

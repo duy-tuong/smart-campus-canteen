@@ -12,7 +12,7 @@ import 'complete_profile_screen.dart';
 import 'login_screen.dart';
 import 'widgets/auth_layout.dart';
 
-enum _Gate { splash, login, completeProfile, locked, error, student, staff }
+enum _Gate { splash, signingOut, login, completeProfile, locked, error, student, staff }
 
 /// Cửa ngõ của app — chọn màn theo trạng thái đăng nhập:
 ///
@@ -50,6 +50,8 @@ class _AuthGateState extends State<AuthGate> {
           AuthStatus.needsProfile => _show(_Gate.completeProfile),
           AuthStatus.locked => _show(_Gate.locked),
           AuthStatus.error => _show(_Gate.error),
+          // Đóng cả các màn đang mở chồng lên (VD: Theo dõi đơn) để mọi listener Firebase được hủy trước khi đăng xuất.
+          AuthStatus.signingOut => _show(_Gate.signingOut),
           AuthStatus.ready when auth.profile!.role.isStaffOrAdmin => _show(_Gate.staff),
           AuthStatus.ready => _show(_Gate.student),
           // unknown / loadingProfile / signedOut (stream đã báo đăng nhập, provider chưa kịp cập nhật)
@@ -67,7 +69,7 @@ class _AuthGateState extends State<AuthGate> {
     }
     _current = gate;
     return switch (gate) {
-      _Gate.splash => const SplashView(),
+      _Gate.splash || _Gate.signingOut => const SplashView(),
       _Gate.login => const LoginScreen(),
       _Gate.completeProfile => const CompleteProfileScreen(),
       _Gate.locked => const AccountLockedScreen(),

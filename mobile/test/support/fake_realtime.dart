@@ -43,6 +43,12 @@ class FakeRealtimeService implements RealtimeService {
   }
 
   @override
+  Stream<List<OrderLive>> watchBoard() async* {
+    yield _orders.values.whereType<OrderLive>().toList();
+    yield* _myOrders.stream;
+  }
+
+  @override
   Stream<List<AppNotification>> watchNotifications(String uid, {int limit = 50}) async* {
     yield notifications;
     yield* _notifications.stream;

@@ -25,7 +25,8 @@ mixin FakeReviewing {
   Map<String, Map<String, Object?>> get orders;
 
   /// Đánh giá theo id; mặc định hạn đánh giá còn.
-  final Map<int, Map<String, Object?>> reviews = {};
+  Map<int, Map<String, Object?>> get reviews => _reviews;
+  final Map<int, Map<String, Object?>> _reviews = {};
   bool reviewWindowOpen = true;
   int _nextReviewId = 100;
 

@@ -145,3 +145,107 @@ class SkeletonList extends StatelessWidget {
     ),
   );
 }
+
+/// Hộp thoại nhập một đoạn chữ (lý do hủy, trả lời đánh giá...). Tự giữ TextEditingController và chỉ dispose
+/// khi hộp thoại bị gỡ khỏi cây widget — dispose ngay sau `showDialog` sẽ lỗi vì TextField vẫn còn trên màn
+/// hình trong lúc hiệu ứng đóng hộp thoại đang chạy.
+class TextPromptDialog extends StatefulWidget {
+  const TextPromptDialog({
+    super.key,
+    required this.title,
+    required this.label,
+    this.initial,
+    this.minLength = 1,
+    this.maxLength = 500,
+    this.confirmLabel = 'Lưu',
+    this.suggestions = const [],
+  });
+
+  final String title;
+  final String label;
+  final String? initial;
+  final int minLength;
+  final int maxLength;
+  final String confirmLabel;
+
+  /// Chạm để điền nhanh (VD: các lý do hủy thường gặp).
+  final List<String> suggestions;
+
+  static Future<String?> show(
+    BuildContext context, {
+    required String title,
+    required String label,
+    String? initial,
+    int minLength = 1,
+    int maxLength = 500,
+    String confirmLabel = 'Lưu',
+    List<String> suggestions = const [],
+  }) => showDialog<String>(
+    context: context,
+    builder: (_) => TextPromptDialog(
+      title: title,
+      label: label,
+      initial: initial,
+      minLength: minLength,
+      maxLength: maxLength,
+      confirmLabel: confirmLabel,
+      suggestions: suggestions,
+    ),
+  );
+
+  @override
+  State<TextPromptDialog> createState() => _TextPromptDialogState();
+}
+
+class _TextPromptDialogState extends State<TextPromptDialog> {
+  late final _controller = TextEditingController(text: widget.initial);
+  String? _error;
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _submit() {
+    final text = _controller.text.trim();
+    if (text.length < widget.minLength) {
+      setState(() => _error = 'Cần ít nhất ${widget.minLength} ký tự.');
+      return;
+    }
+    Navigator.pop(context, text);
+  }
+
+  @override
+  Widget build(BuildContext context) => AlertDialog(
+    title: Text(widget.title),
+    content: Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (widget.suggestions.isNotEmpty) ...[
+          Wrap(
+            spacing: AppSpacing.xs,
+            runSpacing: AppSpacing.xs,
+            children: [
+              for (final s in widget.suggestions) ActionChip(label: Text(s), onPressed: () => _controller.text = s),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.sm),
+        ],
+        TextField(
+          controller: _controller,
+          autofocus: widget.suggestions.isEmpty,
+          maxLength: widget.maxLength,
+          maxLines: 3,
+          minLines: 1,
+          decoration: InputDecoration(labelText: widget.label, errorText: _error),
+        ),
+      ],
+    ),
+    actions: [
+      TextButton(onPressed: () => Navigator.pop(context), child: const Text('Hủy')),
+      FilledButton(onPressed: _submit, child: Text(widget.confirmLabel)),
+    ],
+  );
+}

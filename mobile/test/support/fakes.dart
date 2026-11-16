@@ -8,6 +8,7 @@ import 'package:http/testing.dart';
 
 import 'fake_orders.dart';
 import 'fake_reviews.dart';
+import 'fake_staff.dart';
 
 /// Firebase Auth giả: giữ người dùng trong bộ nhớ, phát sự kiện như authStateChanges() thật.
 class FakeAuthService implements AuthService {
@@ -100,7 +101,7 @@ http.Response problem(int status, String code, String detail, {Map<String, List<
     jsonResponse({'status': status, 'title': detail, 'detail': detail, 'code': code, 'errors': ?errors}, status);
 
 /// Backend giả cho /api/users/me: hồ sơ lưu theo uid (lấy từ token dạng `token-{uid}`).
-class FakeBackend with FakeOrdering, FakeReviewing {
+class FakeBackend with FakeOrdering, FakeReviewing, FakeStaffing {
   @override
   final Map<String, Map<String, Object?>> profiles = {};
   final Set<String> locked = {};
@@ -150,6 +151,8 @@ class FakeBackend with FakeOrdering, FakeReviewing {
       profiles[token] = profile;
       return jsonResponse(profile, 201);
     }
+    final staffResponse = handleStaffing(request);
+    if (staffResponse != null) return staffResponse;
     final reviewResponse = handleReviewing(request, token);
     if (reviewResponse != null) return reviewResponse;
     final orderResponse = handleOrdering(request, token);
@@ -167,6 +170,7 @@ class FakeBackend with FakeOrdering, FakeReviewing {
   /// Bật để PUT/DELETE yêu thích trả lỗi 500 (thử hoàn tác cập nhật lạc quan).
   bool failFavorite = false;
 
+  @override
   final List<Map<String, Object?>> categories = [
     {'id': 1, 'name': 'Cơm', 'icon': 'rice_bowl', 'sortOrder': 1, 'isActive': true, 'foodCount': 20},
     {'id': 3, 'name': 'Nước uống', 'icon': 'local_drink', 'sortOrder': 2, 'isActive': true, 'foodCount': 5},

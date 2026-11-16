@@ -12,6 +12,7 @@ import 'data/remote/menu_api.dart';
 import 'data/remote/notification_api.dart';
 import 'data/remote/order_api.dart';
 import 'data/remote/review_api.dart';
+import 'data/remote/staff_api.dart';
 import 'data/remote/user_api.dart';
 import 'providers/auth_provider.dart';
 import 'providers/cart_provider.dart';
@@ -53,6 +54,7 @@ List<SingleChildWidget> buildAppProviders({
     Provider.value(value: realtime),
     Provider.value(value: images),
     Provider.value(value: ReviewApi(api)),
+    Provider.value(value: StaffApi(api)),
     Provider.value(value: NotificationApi(api)),
     if (searchHistoryDao != null) Provider.value(value: searchHistoryDao),
     ChangeNotifierProvider(

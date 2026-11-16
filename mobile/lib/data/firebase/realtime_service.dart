@@ -14,6 +14,10 @@ abstract interface class RealtimeService {
 
   /// Thông báo của tôi, mới nhất trước.
   Stream<List<AppNotification>> watchNotifications(String uid, {int limit = 50});
+
+  /// Bảng đơn của căn-tin (chỉ staff/admin — Rules kiểm tra claim `role` trong token):
+  /// mọi đơn đang có trên Firebase, cũ nhất trước (đơn đặt trước làm trước).
+  Stream<List<OrderLive>> watchBoard();
 }
 
 class FirebaseRealtimeService implements RealtimeService {
@@ -28,36 +32,33 @@ class FirebaseRealtimeService implements RealtimeService {
     db.setPersistenceCacheSizeBytes(10 * 1024 * 1024);
   }
 
+  // Mọi stream viết bằng async* + `yield*` (KHÔNG dùng `await for`): `yield*` chuyển lệnh hủy xuống stream
+  // của Firebase NGAY khi màn hình thôi nghe. Với `await for`, listener chỉ được hủy ở lần `yield` kế tiếp —
+  // Firebase sống lâu nên listener treo lại; khi đăng xuất, lỗi permission-denied rơi vào generator đã hủy
+  // thành "Unhandled Exception" (đã gặp khi chạy thật).
+
   @override
   Stream<OrderLive?> watchOrder(String orderId) async* {
-    final ref = _db.ref('orders/$orderId')..keepSynced(true);
-    await for (final event in ref.onValue) {
+    yield* _db.ref('orders/$orderId').onValue.map((event) {
       final value = normalizeRtdb(event.snapshot.value);
-      yield value is Map<String, dynamic> ? OrderLive.fromMap(orderId, value) : null;
-    }
+      return value is Map<String, dynamic> ? OrderLive.fromMap(orderId, value) : null;
+    });
   }
 
   @override
   Stream<List<OrderLive>> watchMyOrders(String uid) async* {
     // Rules chỉ cho sinh viên đọc danh sách khi truy vấn ĐÚNG userId của mình.
-    final query = _db.ref('orders').orderByChild('userId').equalTo(uid);
-    await for (final event in query.onValue) {
-      final value = normalizeRtdb(event.snapshot.value);
-      final orders = value is Map<String, dynamic>
-          ? [
-              for (final e in value.entries)
-                if (e.value is Map<String, dynamic>) OrderLive.fromMap(e.key, e.value as Map<String, dynamic>),
-            ]
-          : <OrderLive>[];
-      orders.sort((a, b) => b.createdAt.compareTo(a.createdAt));
-      yield orders;
-    }
+    yield* _db
+        .ref('orders')
+        .orderByChild('userId')
+        .equalTo(uid)
+        .onValue
+        .map((event) => _orders(event)..sort((a, b) => b.createdAt.compareTo(a.createdAt)));
   }
 
   @override
   Stream<List<AppNotification>> watchNotifications(String uid, {int limit = 50}) async* {
-    final query = _db.ref('notifications/$uid').orderByChild('createdAt').limitToLast(limit);
-    await for (final event in query.onValue) {
+    yield* _db.ref('notifications/$uid').orderByChild('createdAt').limitToLast(limit).onValue.map((event) {
       final value = normalizeRtdb(event.snapshot.value);
       final items = value is Map<String, dynamic>
           ? [
@@ -65,8 +66,22 @@ class FirebaseRealtimeService implements RealtimeService {
                 if (e.value is Map<String, dynamic>) AppNotification.fromRtdb(e.key, e.value as Map<String, dynamic>),
             ]
           : <AppNotification>[];
-      items.sort((a, b) => b.createdAt.compareTo(a.createdAt));
-      yield items;
-    }
+      return items..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    });
+  }
+
+  @override
+  Stream<List<OrderLive>> watchBoard() async* {
+    yield* _db.ref('orders').onValue.map((event) => _orders(event)..sort((a, b) => a.createdAt.compareTo(b.createdAt)));
+  }
+
+  static List<OrderLive> _orders(DatabaseEvent event) {
+    final value = normalizeRtdb(event.snapshot.value);
+    return value is Map<String, dynamic>
+        ? [
+            for (final e in value.entries)
+              if (e.value is Map<String, dynamic>) OrderLive.fromMap(e.key, e.value as Map<String, dynamic>),
+          ]
+        : <OrderLive>[];
   }
 }
