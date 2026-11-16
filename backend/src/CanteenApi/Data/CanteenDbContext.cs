@@ -71,9 +71,17 @@ public class CanteenDbContext(DbContextOptions<CanteenDbContext> options, TimePr
         return base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
     }
 
+    /// <summary>
+    /// true = KHÔNG tự gán CreatedAt/UpdatedAt (người gọi tự đặt). Chỉ dùng khi nhập dữ liệu lịch sử
+    /// (sinh dữ liệu demo 30 ngày qua) — nghiệp vụ bình thường luôn để false.
+    /// </summary>
+    public bool PreserveTimestamps { get; set; }
+
     /// <summary>Tự gán CreatedAt/UpdatedAt (UTC) cho các entity <see cref="IAuditable"/>.</summary>
     private void ApplyTimestamps()
     {
+        if (PreserveTimestamps) return;
+
         var now = _clock.GetUtcNow().UtcDateTime;
         foreach (var entry in ChangeTracker.Entries<IAuditable>())
         {

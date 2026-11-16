@@ -248,7 +248,13 @@ public sealed class ReviewService(
     /// Một câu UPDATE: RatingCount = số đánh giá không bị ẩn, AverageRating = trung bình làm tròn 2 chữ số (0 nếu chưa có).
     /// </summary>
     public Task RecalculateFoodRatingAsync(int foodId, CancellationToken ct) =>
-        db.Foods.Where(f => f.Id == foodId).ExecuteUpdateAsync(s => s
+        RecalculateRatingsAsync(db.Foods.Where(f => f.Id == foodId), ct);
+
+    /// <summary>Tính lại điểm của MỌI món bằng một câu UPDATE (dùng sau khi nhập dữ liệu hàng loạt).</summary>
+    public Task RecalculateAllFoodRatingsAsync(CancellationToken ct) => RecalculateRatingsAsync(db.Foods, ct);
+
+    private Task<int> RecalculateRatingsAsync(IQueryable<Food> foods, CancellationToken ct) =>
+        foods.ExecuteUpdateAsync(s => s
             .SetProperty(f => f.RatingCount, f => db.Reviews.Count(r => r.FoodId == f.Id && !r.IsHidden))
             .SetProperty(f => f.AverageRating, f => Math.Round(
                 db.Reviews.Where(r => r.FoodId == f.Id && !r.IsHidden).Average(r => (decimal?)r.Rating) ?? 0m, 2)), ct);

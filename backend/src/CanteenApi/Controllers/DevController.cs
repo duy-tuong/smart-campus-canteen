@@ -162,6 +162,23 @@ public class DevController(
     }
 
     /// <summary>
+    /// POST /api/dev/seed-history?days=30[&amp;reset=true] — sinh đơn + đánh giá cho N ngày qua (không gồm hôm nay)
+    /// để biểu đồ thống kê và điểm sao có số liệu khi demo. Ngẫu nhiên có seed cố định: chạy lại cùng ngày → cùng số liệu.
+    /// Cần chạy /api/dev/seed và /api/dev/accounts trước.
+    /// </summary>
+    [HttpPost("seed-history")]
+    [AllowAnonymous]
+    [ApiExplorerSettings(IgnoreApi = true)]
+    public async Task<IActionResult> SeedHistory(
+        [FromQuery] int days, [FromQuery] bool reset, [FromServices] Services.Dev.HistorySeeder seeder, CancellationToken ct)
+    {
+        if (!env.IsDevelopment()) return NotFound();
+        if (days is < 1 or > 90)
+            throw new BadRequestException(ErrorCodes.ValidationError, "days phải từ 1 đến 90.");
+        return Ok(await seeder.SeedAsync(days, reset, ct));
+    }
+
+    /// <summary>
     /// Đăng nhập bằng email/mật khẩu (qua Firebase Auth REST) và trả về ID token để thử API trên Scalar.
     /// Ví dụ: sv01@smartcanteen.vn / Canteen@123. Token có hạn 1 giờ.
     /// </summary>
@@ -226,6 +243,7 @@ public class DevController(
         await db.Foods.ExecuteDeleteAsync(ct);         // cascade: FoodOptionGroups, FoodOptions
         await db.Categories.ExecuteDeleteAsync(ct);
         await db.Vouchers.ExecuteDeleteAsync(ct);
+        await db.Users.Where(u => u.Id.StartsWith("hist-")).ExecuteDeleteAsync(ct); // người dùng ảo của dữ liệu lịch sử
 
         foreach (var table in new[] { "Categories", "Foods", "FoodOptionGroups", "FoodOptions", "Vouchers",
                                       "OrderItems", "OrderItemOptions", "OrderStatusHistory", "Payments",

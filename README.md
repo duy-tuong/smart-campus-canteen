@@ -183,11 +183,24 @@ Các endpoint `/api/dev/*` trả về 404 ở môi trường khác và không xu
 | POST | `/api/dev/seed` | Nạp menu (4 danh mục, 18 món, 13 nhóm tùy chọn, 34 tùy chọn) và 3 voucher từ `SeedData/menu.json`. Thêm `?reset=true` để **xóa toàn bộ dữ liệu nghiệp vụ** (SQL Server và Firebase) rồi nạp lại |
 | POST | `/api/dev/accounts` | Tạo tài khoản demo trong Firebase Auth, gán vai trò và tạo hồ sơ trong bảng `Users`. Chạy lại nhiều lần không bị trùng |
 | POST | `/api/dev/role?email=...&role=Staff` | Đổi vai trò một tài khoản (`Student`, `Staff`, `Admin`) |
+| POST | `/api/dev/seed-history?days=30` | Sinh **đơn hàng và đánh giá cho N ngày qua** (1–90, không gồm hôm nay) để biểu đồ thống kê và điểm sao có số liệu khi demo. Thêm `&reset=true` để xóa dữ liệu lịch sử cũ và sinh lại. Cần chạy `seed` và `accounts` trước |
 
 ```bash
 curl -X POST http://localhost:5265/api/dev/seed
 curl -X POST http://localhost:5265/api/dev/accounts
+curl -X POST "http://localhost:5265/api/dev/seed-history?days=30"
 ```
+
+**Dữ liệu lịch sử** (`seed-history`) mô phỏng căn-tin hoạt động thật:
+
+- **Số đơn:** ngày thường 22–40 đơn, cuối tuần 6–12 đơn.
+- **Khung giờ:** sáng sớm 6:30–7:45, ra chơi 9:30–10:00, **trưa 11:00–12:45 (đông nhất)**, chiều tan học 16:30–17:45.
+- **Món ăn:** món phổ biến (Trà sữa, Cơm gà, Bánh mì…) được chọn nhiều hơn. Tùy chọn hợp lệ (Size, topping…) và giá tính đúng như đơn thật.
+- **Trạng thái và thanh toán:** khoảng 8% đơn bị hủy kèm lý do. 30% đơn chuyển khoản. Đơn hoàn thành có đủ 4 mốc lịch sử do staff thao tác. Có voucher "khai trường" `KHAITRUONG15`, đã hết hạn từ hôm nay.
+- **Đánh giá:** khoảng 40% đơn hoàn thành có đánh giá, nghiêng về 4–5 sao. Đánh giá thấp thường được căn-tin trả lời, vài đánh giá spam bị ẩn. Điểm sao của món được tính lại sau khi sinh.
+- **Người đặt:** các tài khoản demo cùng 8 sinh viên ảo (`hist-student-01`…).
+- **Lặp lại được:** ngẫu nhiên có seed cố định, nên chạy lại cùng ngày cho cùng số liệu. Ví dụ ngày 16/11/2026: 705 đơn, 656 hoàn thành, doanh thu 36.821.300đ, 284 đánh giá.
+- **An toàn:** dữ liệu lịch sử thỏa mọi CHECK/UNIQUE (có test). Ngày nào đã có đơn thật thì mã nhận món được đánh số tiếp, không trùng.
 
 **Tài khoản demo** (mật khẩu chung: `Canteen@123`):
 
@@ -476,7 +489,7 @@ cd backend
 dotnet test
 ```
 
-Bộ test nằm trong `backend/tests/CanteenApi.Tests` (xUnit), gồm **198 test, chạy khoảng 17 giây**. Test chạy **toàn bộ backend thật trong bộ nhớ** (`WebApplicationFactory`): routing, phân quyền, validate, EF Core và SQL Server thật. Chỉ một số phần được thay thế:
+Bộ test nằm trong `backend/tests/CanteenApi.Tests` (xUnit), gồm **203 test, chạy khoảng 27 giây**. Test chạy **toàn bộ backend thật trong bộ nhớ** (`WebApplicationFactory`): routing, phân quyền, validate, EF Core và SQL Server thật. Chỉ một số phần được thay thế:
 
 | Thành phần | Trong test |
 |---|---|
@@ -501,6 +514,7 @@ Không cần file service account và không cần Internet.
 | `Api/CategoriesTests` | Hiển thị theo vai trò, trùng tên không dấu, sắp xếp, xóa mềm, tạo lại tên đã xóa |
 | `Api/ReviewTests` | Quyền đánh giá (đơn hoàn thành, chủ đơn, món trong đơn), trùng, hạn 7 ngày (tua đồng hồ), điểm trung bình sau tạo/sửa/xóa/ẩn (ví dụ 5, 4, 3 cho 4,00; sửa thành 5, 4, 4 cho 4,33), 10 đánh giá song song, ẩn tên công khai, phân bố sao, trả lời kèm thông báo |
 | `Api/StatisticsTests` | Doanh thu, tỷ lệ hủy, giá trị đơn trung bình, so sánh kỳ trước (+195%), ngày trống có giá trị 0, gom tuần (thứ Hai) và tháng, món bán chạy, **đơn 06:45 sáng VN nằm ở cột 6 giờ chứ không phải 23 giờ UTC**, tỷ trọng danh mục tổng 100%, tham số sai, phân quyền |
+| `Api/HistorySeederTests` | Dữ liệu lịch sử thỏa mọi ràng buộc, không đụng hôm nay, điểm sao khớp đánh giá, thống kê khớp tổng đã sinh, chạy lại cho cùng số liệu, không trùng mã với đơn thật |
 | `Api/FoodsTests` | Tìm/lọc/sắp xếp. **Số suất còn lại tính theo giờ Việt Nam qua nửa đêm**, bỏ đơn hủy, sang ngày mới tính lại. Bán chạy 30 ngày. Chống ghi đè khi sửa đồng thời. Tùy chọn. Xóa mềm giữ lịch sử đơn. Yêu thích theo từng người |
 
 ## Chạy mobile
