@@ -93,6 +93,8 @@ builder.Services.AddScoped<NotificationService>();
 builder.Services.AddScoped<CanteenApi.Services.Reviews.ReviewService>();
 builder.Services.AddScoped<CanteenApi.Services.Statistics.StatisticsService>();
 builder.Services.AddScoped<CanteenApi.Services.Dev.HistorySeeder>();
+builder.Services.AddScoped<CanteenApi.Services.Dev.FoodImageSeeder>();
+builder.Services.AddScoped<CanteenApi.Services.Dev.DemoResetService>();
 
 // ---------- Đồng bộ realtime lên Firebase (hàng đợi trong bộ nhớ + worker ghi nền) ----------
 builder.Services.AddSingleton<RealtimeQueue>();

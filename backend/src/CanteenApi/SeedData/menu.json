@@ -5,7 +5,7 @@
       "foods": [
         {
           "name": "Cơm gà xối mỡ", "description": "Đùi gà chiên giòn xối mỡ, cơm chiên, dưa leo và nước mắm chua ngọt",
-          "price": 35000, "prepTimeMinutes": 10, "dailyLimit": 60,
+          "imageUrl": "/images/com-ga-xoi-mo.jpg", "price": 35000, "prepTimeMinutes": 10, "dailyLimit": 60,
           "optionGroups": [
             { "name": "Món thêm", "isRequired": false, "minSelect": 0, "maxSelect": 3, "sortOrder": 1,
               "options": [
@@ -17,7 +17,7 @@
         },
         {
           "name": "Cơm tấm sườn bì chả", "description": "Sườn cốt lết nướng than, bì, chả trứng, mỡ hành",
-          "price": 40000, "prepTimeMinutes": 10, "dailyLimit": 50,
+          "imageUrl": "/images/com-tam-suon-bi-cha.jpg", "price": 40000, "prepTimeMinutes": 10, "dailyLimit": 50,
           "optionGroups": [
             { "name": "Món thêm", "isRequired": false, "minSelect": 0, "maxSelect": 3, "sortOrder": 1,
               "options": [
@@ -29,7 +29,7 @@
         },
         {
           "name": "Cơm chiên dương châu", "description": "Cơm chiên trứng, lạp xưởng, tôm, đậu Hà Lan, cà rốt",
-          "price": 30000, "prepTimeMinutes": 8,
+          "imageUrl": "/images/com-chien-duong-chau.jpg", "price": 30000, "prepTimeMinutes": 8,
           "optionGroups": [
             { "name": "Độ cay", "isRequired": true, "minSelect": 1, "maxSelect": 1, "sortOrder": 1,
               "options": [
@@ -41,11 +41,11 @@
         },
         {
           "name": "Cơm bò lúc lắc", "description": "Bò Úc xào lúc lắc, khoai tây chiên, salad dầu giấm",
-          "price": 45000, "prepTimeMinutes": 12, "dailyLimit": 30
+          "imageUrl": "/images/com-bo-luc-lac.jpg", "price": 45000, "prepTimeMinutes": 12, "dailyLimit": 30
         },
         {
           "name": "Cơm chay thập cẩm", "description": "Đậu hũ sốt cà, nấm xào, rau củ luộc, chả chay",
-          "price": 28000, "prepTimeMinutes": 8
+          "imageUrl": "/images/com-chay-thap-cam.jpg", "price": 28000, "prepTimeMinutes": 8
         }
       ]
     },
@@ -54,7 +54,7 @@
       "foods": [
         {
           "name": "Phở bò tái", "description": "Bánh phở mềm, bò tái, nước dùng hầm xương 12 tiếng",
-          "price": 40000, "prepTimeMinutes": 7, "dailyLimit": 40,
+          "imageUrl": "/images/pho-bo-tai.jpg", "price": 40000, "prepTimeMinutes": 7, "dailyLimit": 40,
           "optionGroups": [
             { "name": "Cỡ tô", "isRequired": true, "minSelect": 1, "maxSelect": 1, "sortOrder": 1,
               "options": [
@@ -65,7 +65,7 @@
         },
         {
           "name": "Bún bò Huế", "description": "Bún sợi to, bắp bò, giò heo, chả cua, sả ớt",
-          "price": 40000, "prepTimeMinutes": 7, "dailyLimit": 40,
+          "imageUrl": "/images/bun-bo-hue.jpg", "price": 40000, "prepTimeMinutes": 7, "dailyLimit": 40,
           "optionGroups": [
             { "name": "Cỡ tô", "isRequired": true, "minSelect": 1, "maxSelect": 1, "sortOrder": 1,
               "options": [
@@ -76,11 +76,11 @@
         },
         {
           "name": "Mì xào hải sản", "description": "Mì trứng xào tôm, mực, cải ngọt, sốt dầu hào",
-          "price": 38000, "prepTimeMinutes": 10
+          "imageUrl": "/images/mi-xao-hai-san.jpg", "price": 38000, "prepTimeMinutes": 10
         },
         {
           "name": "Hủ tiếu Nam Vang", "description": "Hủ tiếu dai, tôm, thịt bằm, gan, trứng cút",
-          "price": 35000, "prepTimeMinutes": 7,
+          "imageUrl": "/images/hu-tieu-nam-vang.jpg", "price": 35000, "prepTimeMinutes": 7,
           "optionGroups": [
             { "name": "Kiểu", "isRequired": true, "minSelect": 1, "maxSelect": 1, "sortOrder": 1,
               "options": [
@@ -96,7 +96,7 @@
       "foods": [
         {
           "name": "Trà đào cam sả", "description": "Trà đen ủ lạnh, đào ngâm, cam tươi và sả",
-          "price": 20000, "prepTimeMinutes": 3,
+          "imageUrl": "/images/tra-dao-cam-sa.jpg", "price": 20000, "prepTimeMinutes": 3,
           "optionGroups": [
             { "name": "Size", "isRequired": true, "minSelect": 1, "maxSelect": 1, "sortOrder": 1,
               "options": [
@@ -113,7 +113,7 @@
         },
         {
           "name": "Cà phê sữa đá", "description": "Cà phê phin truyền thống, sữa đặc",
-          "price": 18000, "prepTimeMinutes": 3,
+          "imageUrl": "/images/ca-phe-sua-da.jpg", "price": 18000, "prepTimeMinutes": 3,
           "optionGroups": [
             { "name": "Size", "isRequired": true, "minSelect": 1, "maxSelect": 1, "sortOrder": 1,
               "options": [
@@ -124,7 +124,7 @@
         },
         {
           "name": "Trà sữa trân châu", "description": "Trà sữa Assam, trân châu đường đen nấu mỗi ngày",
-          "price": 25000, "prepTimeMinutes": 4,
+          "imageUrl": "/images/tra-sua-tran-chau.jpg", "price": 25000, "prepTimeMinutes": 4,
           "optionGroups": [
             { "name": "Size", "isRequired": true, "minSelect": 1, "maxSelect": 1, "sortOrder": 1,
               "options": [
@@ -149,11 +149,11 @@
         },
         {
           "name": "Nước ép cam", "description": "Cam sành vắt tươi, không đường",
-          "price": 22000, "prepTimeMinutes": 3
+          "imageUrl": "/images/nuoc-ep-cam.jpg", "price": 22000, "prepTimeMinutes": 3
         },
         {
           "name": "Nước suối", "description": "Chai 500ml",
-          "price": 8000, "prepTimeMinutes": 1
+          "imageUrl": "/images/nuoc-suoi.jpg", "price": 8000, "prepTimeMinutes": 1
         }
       ]
     },
@@ -162,7 +162,7 @@
       "foods": [
         {
           "name": "Bánh mì thịt", "description": "Bánh mì giòn, pate, thịt nguội, chả lụa, rau thơm",
-          "price": 20000, "prepTimeMinutes": 3, "dailyLimit": 80,
+          "imageUrl": "/images/banh-mi-thit.jpg", "price": 20000, "prepTimeMinutes": 3, "dailyLimit": 80,
           "optionGroups": [
             { "name": "Món thêm", "isRequired": false, "minSelect": 0, "maxSelect": 2, "sortOrder": 1,
               "options": [
@@ -173,15 +173,15 @@
         },
         {
           "name": "Khoai tây chiên", "description": "Khoai tây cắt sợi chiên giòn, tương cà, tương ớt",
-          "price": 20000, "prepTimeMinutes": 5
+          "imageUrl": "/images/khoai-tay-chien.jpg", "price": 20000, "prepTimeMinutes": 5
         },
         {
           "name": "Xúc xích nướng", "description": "Xúc xích Đức nướng, sốt tương ớt",
-          "price": 15000, "prepTimeMinutes": 4
+          "imageUrl": "/images/xuc-xich-nuong.jpg", "price": 15000, "prepTimeMinutes": 4
         },
         {
           "name": "Bánh flan", "description": "Bánh flan trứng sữa, cà phê đá bào",
-          "price": 12000, "prepTimeMinutes": 1, "dailyLimit": 50
+          "imageUrl": "/images/banh-flan.jpg", "price": 12000, "prepTimeMinutes": 1, "dailyLimit": 50
         }
       ]
     }

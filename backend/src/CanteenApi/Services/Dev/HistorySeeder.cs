@@ -24,8 +24,8 @@ public sealed record HistorySeedResult(
 public sealed class HistorySeeder(CanteenDbContext db, ReviewService reviews, TimeProvider clock, ILogger<HistorySeeder> logger)
 {
     private const int Seed = 20261116;
-    private const string HistoryPrefix = "hist-";
-    private const string HistoryVoucherCode = "KHAITRUONG15";
+    public const string HistoryPrefix = "hist-";
+    public const string HistoryVoucherCode = "KHAITRUONG15";
 
     // Món phổ biến được chọn nhiều hơn (trọng số); món không có trong bảng = 1.
     private static readonly Dictionary<string, int> Popularity = new()

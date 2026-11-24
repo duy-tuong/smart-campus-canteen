@@ -80,7 +80,7 @@ Mật khẩu chung: `Canteen@123`
 
 Bản **debug** có nút chọn nhanh 3 tài khoản ở màn Đăng nhập. Bản **release** ẩn các nút này, phải nhập tay.
 
-Dữ liệu thống kê mẫu được sinh bằng `POST /api/dev/seed-history?days=30` (xem README gốc). Dữ liệu mẫu chỉ có đến ngày chạy lệnh, nên nếu khoảng *7 ngày* đang trống thì chọn *30 ngày*, hoặc chạy lại lệnh trước buổi demo.
+**Trước mỗi buổi demo**, chạy `scripts/demo-reset.ps1` ở thư mục gốc repo (xem [README gốc](../README.md#khởi-tạo-dữ-liệu-demo-chỉ-chạy-ở-môi-trường-development)). Script dọn đơn chạy thử, khôi phục thực đơn và voucher, và sinh lại 30 ngày lịch sử kết thúc ở hôm qua, để thống kê *7 ngày* luôn có số liệu. Thêm `-ClearApp` để xóa cả giỏ hàng và đăng nhập của app trên máy ảo.
 
 ## Đối chiếu yêu cầu đề bài
 
@@ -196,5 +196,5 @@ flutter build apk --release --split-per-abi  # tách theo CPU; điện thoại h
 | "Không kết nối được máy chủ" trên máy ảo | Kiểm tra backend đang chạy (`http://localhost:5265/api/health`). Địa chỉ trong app phải là `http://10.0.2.2:5265` |
 | Điện thoại thật không kết nối được | Điện thoại và máy tính cùng một mạng Wi-Fi; đã mở cổng 5265; mạng Windows là *Private*. Thử mở `http://<IP>:5265/api/health` bằng trình duyệt trên điện thoại |
 | Đặt món báo "Căn-tin chỉ nhận đơn từ … đến …" | Giờ mở cửa cấu hình ở `appsettings.json` của backend. Khi thử ngoài giờ, chạy backend với `Canteen__CloseTime=23:59` |
-| Thống kê "7 ngày" trống | Dữ liệu mẫu đã cũ; chọn "30 ngày" hoặc chạy lại `seed-history` |
+| Thống kê "7 ngày" trống, voucher hết hạn, bảng đơn còn đơn cũ, sinh viên không đặt thêm được | Dữ liệu demo đã cũ: chạy `scripts/demo-reset.ps1` |
 | Nhân viên không thấy bảng đơn | Đăng xuất rồi đăng nhập lại để token nhận claim `role` mới (cần cho Security Rules) |

@@ -7,6 +7,7 @@ using CanteenApi.Data;
 using CanteenApi.Models;
 using CanteenApi.Options;
 using CanteenApi.Services;
+using CanteenApi.Services.Dev;
 using CanteenApi.Services.Firebase;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -88,6 +89,48 @@ public class DevController(
             vouchers = seed.Vouchers.Count,
         };
         logger.LogInformation("Seeded {@Result}", result);
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// POST /api/dev/seed-images[?overwrite=true] — gắn ảnh mẫu (wwwroot/images, khai báo ở trường imageUrl của
+    /// menu.json) cho các món đang có trong database theo TÊN món. Dùng khi database đã seed trước khi có ảnh:
+    /// không cần reset nên lịch sử đơn, đánh giá vẫn giữ nguyên. Mặc định không ghi đè ảnh nhân viên đã upload.
+    /// </summary>
+    [HttpPost("seed-images")]
+    [AllowAnonymous]
+    [ApiExplorerSettings(IgnoreApi = true)]
+    public async Task<IActionResult> SeedImages(
+        [FromQuery] bool overwrite, [FromServices] FoodImageSeeder seeder, CancellationToken ct)
+    {
+        if (!env.IsDevelopment()) return NotFound();
+
+        var seed = await ReadSeedAsync(ct);
+        var images = seed.Categories.SelectMany(c => c.Foods)
+            .Where(f => f.ImageUrl is not null)
+            .ToDictionary(f => f.Name, f => f.ImageUrl!);
+        return Ok(await seeder.ApplyAsync(images, overwrite, ct));
+    }
+
+    /// <summary>
+    /// POST /api/dev/demo-reset — đưa dữ liệu về trạng thái sẵn sàng demo mà không xóa trắng database:
+    /// xóa đơn chạy thử (giữ dữ liệu lịch sử hist-…) cùng đánh giá và mọi thông báo, khôi phục thực đơn và
+    /// gia hạn voucher theo menu.json, rồi dọn bản sao realtime trên Firebase. Xem DemoResetService.
+    /// Thường được gọi bởi scripts/demo-reset.ps1 (kèm accounts, seed-history, seed-images).
+    /// </summary>
+    [HttpPost("demo-reset")]
+    [AllowAnonymous]
+    [ApiExplorerSettings(IgnoreApi = true)]
+    public async Task<IActionResult> DemoReset([FromServices] DemoResetService service, CancellationToken ct)
+    {
+        if (!env.IsDevelopment()) return NotFound();
+
+        var seed = await ReadSeedAsync(ct);
+        var result = await service.ResetAsync(seed.Categories, seed.Vouchers, ct);
+
+        // Firebase chỉ giữ bản sao realtime của đơn / thông báo đang theo dõi → xóa cho khớp SQL Server.
+        await rtdb.DeleteAsync("orders", ct);
+        await rtdb.DeleteAsync("notifications", ct);
         return Ok(result);
     }
 
@@ -286,9 +329,6 @@ public class DevController(
 
     private sealed record SeedData(List<Category> Categories, List<SeedVoucher> Vouchers, List<SeedAccount> Accounts);
 
-    private sealed record SeedVoucher(
-        string Code, string Description, DiscountType DiscountType, int DiscountValue,
-        int? MaxDiscount, int MinOrderAmount, int ValidDays, int? UsageLimit, int? PerUserLimit);
 
     private sealed record SeedAccount(
         string Email, string Password, string FullName, UserRole Role,

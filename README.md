@@ -75,6 +75,7 @@ sqlcmd -S localhost -E -C -I -d SmartCanteenDb -f 65001 -i backend/sql/constrain
 ├── mobile/     Flutter app (package vn.edu.smartcanteen.app)
 ├── backend/    ASP.NET Core Web API (SmartCanteen.slnx → src/CanteenApi)
 ├── firebase/   Security Rules cho Realtime Database (deploy bằng Firebase CLI)
+├── scripts/    demo-reset.ps1: làm mới dữ liệu trước buổi demo
 └── docs/       Báo cáo, slide, sơ đồ, ảnh chụp màn hình
 ```
 
@@ -180,7 +181,9 @@ Các endpoint `/api/dev/*` trả về 404 ở môi trường khác và không xu
 
 | Method | Endpoint | Mô tả |
 |---|---|---|
-| POST | `/api/dev/seed` | Nạp menu (4 danh mục, 18 món, 13 nhóm tùy chọn, 34 tùy chọn) và 3 voucher từ `SeedData/menu.json`. Thêm `?reset=true` để **xóa toàn bộ dữ liệu nghiệp vụ** (SQL Server và Firebase) rồi nạp lại |
+| POST | `/api/dev/seed` | Nạp menu (4 danh mục, 18 món **kèm ảnh**, 13 nhóm tùy chọn, 34 tùy chọn) và 3 voucher từ `SeedData/menu.json`. Thêm `?reset=true` để **xóa toàn bộ dữ liệu nghiệp vụ** (SQL Server và Firebase) rồi nạp lại |
+| POST | `/api/dev/demo-reset` | **Làm mới trước buổi demo** mà không xóa trắng database: xóa đơn chạy thử (giữ dữ liệu lịch sử `hist-…`) cùng đánh giá của chúng và mọi thông báo, đưa thực đơn về đúng `menu.json` (giá, mô tả, số suất, ảnh, đang bán; món hoặc danh mục thêm khi tập bị ẩn), gia hạn voucher mẫu tính từ hôm nay, dọn bản sao trên Firebase. Tài khoản và yêu thích được giữ |
+| POST | `/api/dev/seed-images` | Gắn **ảnh món mẫu** (`wwwroot/images`, khai báo ở trường `imageUrl` của `menu.json`) cho các món đang có trong database, theo tên món. Dùng cho database đã seed trước khi có ảnh: không cần reset nên lịch sử đơn được giữ. Mặc định không ghi đè ảnh nhân viên đã tải lên; thêm `?overwrite=true` để thay cả những ảnh đó. Nguồn ảnh và giấy phép: `wwwroot/images/CREDITS.md` |
 | POST | `/api/dev/accounts` | Tạo tài khoản demo trong Firebase Auth, gán vai trò và tạo hồ sơ trong bảng `Users`. Chạy lại nhiều lần không bị trùng |
 | POST | `/api/dev/role?email=...&role=Staff` | Đổi vai trò một tài khoản (`Student`, `Staff`, `Admin`) |
 | POST | `/api/dev/seed-history?days=30` | Sinh **đơn hàng và đánh giá cho N ngày qua** (1–90, không gồm hôm nay) để biểu đồ thống kê và điểm sao có số liệu khi demo. Thêm `&reset=true` để xóa dữ liệu lịch sử cũ và sinh lại. Cần chạy `seed` và `accounts` trước |
@@ -188,8 +191,23 @@ Các endpoint `/api/dev/*` trả về 404 ở môi trường khác và không xu
 ```bash
 curl -X POST http://localhost:5265/api/dev/seed
 curl -X POST http://localhost:5265/api/dev/accounts
+curl -X POST http://localhost:5265/api/dev/seed-images   # chỉ cần khi database đã seed từ trước khi có ảnh
 curl -X POST "http://localhost:5265/api/dev/seed-history?days=30"
 ```
+
+**Làm mới dữ liệu trước mỗi buổi demo** (backend đang chạy):
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\demo-reset.ps1            # dữ liệu trên server
+powershell -ExecutionPolicy Bypass -File .\scripts\demo-reset.ps1 -ClearApp  # + xóa dữ liệu app trên máy ảo / điện thoại cắm cáp (adb)
+```
+
+Script gọi lần lượt `accounts`, `demo-reset`, `seed-history?days=30&reset=true` và `seed-images`, rồi cảnh báo nếu căn-tin đang ngoài giờ nhận đơn. Sau khi chạy:
+- bảng đơn trống, mã nhận món hôm nay bắt đầu lại từ 001;
+- thống kê có đủ 30 ngày kết thúc ở hôm qua;
+- voucher còn hạn, thực đơn đúng như ban đầu.
+
+Chạy lại nhiều lần cho cùng kết quả. Tham số: `-BaseUrl` (mặc định `http://localhost:5265`), `-Days` (mặc định 30). Giỏ hàng và hóa đơn lưu offline nằm trên điện thoại nên chỉ xóa được bằng `-ClearApp`, hoặc gỡ cài đặt app.
 
 **Dữ liệu lịch sử** (`seed-history`) mô phỏng căn-tin hoạt động thật:
 
@@ -490,7 +508,7 @@ cd backend
 dotnet test
 ```
 
-Bộ test nằm trong `backend/tests/CanteenApi.Tests` (xUnit), gồm **209 test, chạy khoảng 27 giây**. Test chạy **toàn bộ backend thật trong bộ nhớ** (`WebApplicationFactory`): routing, phân quyền, validate, EF Core và SQL Server thật. Chỉ một số phần được thay thế:
+Bộ test nằm trong `backend/tests/CanteenApi.Tests` (xUnit), gồm **216 test, chạy khoảng 27 giây**. Test chạy **toàn bộ backend thật trong bộ nhớ** (`WebApplicationFactory`): routing, phân quyền, validate, EF Core và SQL Server thật. Chỉ một số phần được thay thế:
 
 | Thành phần | Trong test |
 |---|---|
@@ -516,6 +534,8 @@ Không cần file service account và không cần Internet.
 | `Api/ReviewTests` | Quyền đánh giá (đơn hoàn thành, chủ đơn, món trong đơn), trùng, hạn 7 ngày (tua đồng hồ), điểm trung bình sau tạo/sửa/xóa/ẩn (ví dụ 5, 4, 3 cho 4,00; sửa thành 5, 4, 4 cho 4,33), 10 đánh giá song song, ẩn tên công khai, phân bố sao, trả lời kèm thông báo |
 | `Api/StatisticsTests` | Doanh thu, tỷ lệ hủy, giá trị đơn trung bình, so sánh kỳ trước (+195%), ngày trống có giá trị 0, gom tuần (thứ Hai) và tháng, món bán chạy, **đơn 06:45 sáng VN nằm ở cột 6 giờ chứ không phải 23 giờ UTC**, tỷ trọng danh mục tổng 100%, tham số sai, phân quyền |
 | `Api/HistorySeederTests` | Dữ liệu lịch sử thỏa mọi ràng buộc, không đụng hôm nay, điểm sao khớp đánh giá, thống kê khớp tổng đã sinh, chạy lại cho cùng số liệu, không trùng mã với đơn thật |
+| `Api/DemoResetServiceTests` | Xóa đơn chạy thử nhưng giữ đơn lịch sử, xóa đánh giá và thông báo kèm theo, tính lại điểm sao, gia hạn voucher từ 00:00 giờ VN và trả lại lượt dùng, đưa món và danh mục về đúng `menu.json`, ẩn món thêm khi tập, chạy lại không đổi gì thêm |
+| `Api/FoodImageSeederTests` | Gắn ảnh mẫu theo tên món, ảnh phục vụ tĩnh được; báo file thiếu và tên lạ; không ghi đè ảnh đã upload (trừ khi `overwrite`, khi đó dọn file cũ); chặn đường dẫn ngoài `/images` |
 | `Api/FoodsTests` | Tìm/lọc/sắp xếp. **Số suất còn lại tính theo giờ Việt Nam qua nửa đêm**, bỏ đơn hủy, sang ngày mới tính lại. Bán chạy 30 ngày. Chống ghi đè khi sửa đồng thời. Tùy chọn. Xóa mềm giữ lịch sử đơn. Yêu thích theo từng người |
 
 ## Chạy mobile
