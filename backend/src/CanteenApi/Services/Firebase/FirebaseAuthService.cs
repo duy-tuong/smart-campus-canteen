@@ -26,7 +26,8 @@ public interface IFirebaseAuthService
 }
 
 /// <summary>Bản cài đặt thật, bọc Firebase Admin SDK.</summary>
-public sealed class FirebaseAuthService(FirebaseCredentialProvider provider) : IFirebaseAuthService
+public sealed class FirebaseAuthService(FirebaseCredentialProvider provider, ILogger<FirebaseAuthService> logger)
+    : IFirebaseAuthService
 {
     private FirebaseAuth Auth => FirebaseAuth.GetAuth(provider.EnsureApp());
 
@@ -55,10 +56,29 @@ public sealed class FirebaseAuthService(FirebaseCredentialProvider provider) : I
     }
 
     public Task SetRoleClaimAsync(string uid, UserRole role, CancellationToken ct = default) =>
-        Auth.SetCustomUserClaimsAsync(uid, new Dictionary<string, object> { ["role"] = Roles.ToClaim(role) }, ct);
+        IgnoreMissingUserAsync(uid, "role",
+            () => Auth.SetCustomUserClaimsAsync(uid, new Dictionary<string, object> { ["role"] = Roles.ToClaim(role) }, ct));
 
     public Task SetDisabledAsync(string uid, bool disabled, CancellationToken ct = default) =>
-        Auth.UpdateUserAsync(new UserRecordArgs { Uid = uid, Disabled = disabled }, ct);
+        IgnoreMissingUserAsync(uid, "disabled",
+            () => Auth.UpdateUserAsync(new UserRecordArgs { Uid = uid, Disabled = disabled }, ct));
+
+    /// <summary>
+    /// Hồ sơ có trong SQL Server nhưng KHÔNG có tài khoản Firebase (VD: khách hàng mẫu do /api/dev/seed-history tạo,
+    /// hoặc tài khoản đã bị xóa trên Firebase Console): không có phiên đăng nhập nào để đồng bộ → bỏ qua,
+    /// thay đổi trong SQL Server vẫn được lưu (và vẫn chặn ở mọi request nhờ kiểm tra IsActive/Role trong DB).
+    /// </summary>
+    private async Task IgnoreMissingUserAsync(string uid, string what, Func<Task> action)
+    {
+        try
+        {
+            await action();
+        }
+        catch (FirebaseAuthException ex) when (ex.AuthErrorCode == AuthErrorCode.UserNotFound)
+        {
+            logger.LogWarning("Firebase user {Uid} not found — skipped syncing {What} (database only)", uid, what);
+        }
+    }
 
     private static FirebaseUserInfo Map(UserRecord u) => new(u.Uid, u.Email, u.Disabled);
 }

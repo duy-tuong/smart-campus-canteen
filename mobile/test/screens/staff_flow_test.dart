@@ -32,7 +32,8 @@ void main() {
 
   /// Đơn có trên backend giả + Firebase giả (như backend vừa ghi lên Firebase).
   void seedLive(String status, {String paymentMethod = 'cash', String paymentStatus = 'pending'}) {
-    final order = app.backend.seedOrder(status: status, paymentMethod: paymentMethod)..['paymentStatus'] = paymentStatus;
+    final order = app.backend.seedOrder(status: status, paymentMethod: paymentMethod)
+      ..['paymentStatus'] = paymentStatus;
     app.realtime.pushOrder(
       liveOrder(
         order['id']! as String,
@@ -209,7 +210,13 @@ void main() {
 
   testWidgets('kiểm duyệt đánh giá: trả lời → rời danh sách "Chưa trả lời"; ẩn kèm lý do', (tester) async {
     final order = app.backend.seedOrder(status: 'completed');
-    app.backend.addReview(orderId: order['id']! as String, foodId: 1, foodName: 'Cơm gà xối mỡ', rating: 2, comment: 'Hơi nguội');
+    app.backend.addReview(
+      orderId: order['id']! as String,
+      foodId: 1,
+      foodName: 'Cơm gà xối mỡ',
+      rating: 2,
+      comment: 'Hơi nguội',
+    );
     await pumpStaff(tester);
     await tap(tester, find.text('Quản lý'));
     await tap(tester, find.text('Đánh giá'));

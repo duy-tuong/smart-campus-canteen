@@ -6,10 +6,11 @@ import '../../data/firebase/realtime_service.dart';
 import '../../models/enums.dart';
 import '../../models/live.dart';
 import '../../providers/auth_provider.dart';
-import '../../widgets/state_views.dart';
+import '../admin/users_screen.dart';
 import '../profile/account_screen.dart';
 import 'manage_hub_screen.dart';
 import 'order_board_screen.dart';
+import 'stats_screen.dart';
 
 /// Khung của Nhân viên căn-tin / Quản trị viên: Bảng đơn · Quản lý · Thống kê · (Người dùng — admin) · Tài khoản.
 /// Badge trên "Bảng đơn" = số đơn mới chưa nấu (StreamBuilder trên Firebase).
@@ -56,7 +57,7 @@ class _StaffShellState extends State<StaffShell> {
               selectedIcon: Icons.insights_rounded,
               label: 'Thống kê',
             ),
-            const _ComingSoon('Thống kê', Icons.insights_rounded, 'Doanh thu, món bán chạy và giờ cao điểm.'),
+            const StatsScreen(),
           ),
           if (isAdmin)
             (
@@ -65,7 +66,7 @@ class _StaffShellState extends State<StaffShell> {
                 selectedIcon: Icons.group_rounded,
                 label: 'Người dùng',
               ),
-              const _ComingSoon('Người dùng', Icons.group_rounded, 'Tìm kiếm, đổi vai trò, khóa / mở khóa tài khoản.'),
+              const UsersScreen(),
             ),
           (
             const ShellDestination(
@@ -88,18 +89,4 @@ class _StaffShellState extends State<StaffShell> {
       },
     );
   }
-}
-
-class _ComingSoon extends StatelessWidget {
-  const _ComingSoon(this.title, this.icon, this.message);
-
-  final String title;
-  final IconData icon;
-  final String message;
-
-  @override
-  Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: Text(title)),
-    body: EmptyState(icon: icon, title: 'Sắp ra mắt', message: message),
-  );
 }

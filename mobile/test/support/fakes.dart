@@ -6,6 +6,7 @@ import 'package:campus_canteen/data/remote/api_client.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/testing.dart';
 
+import 'fake_admin.dart';
 import 'fake_orders.dart';
 import 'fake_reviews.dart';
 import 'fake_staff.dart';
@@ -101,9 +102,10 @@ http.Response problem(int status, String code, String detail, {Map<String, List<
     jsonResponse({'status': status, 'title': detail, 'detail': detail, 'code': code, 'errors': ?errors}, status);
 
 /// Backend giả cho /api/users/me: hồ sơ lưu theo uid (lấy từ token dạng `token-{uid}`).
-class FakeBackend with FakeOrdering, FakeReviewing, FakeStaffing {
+class FakeBackend with FakeOrdering, FakeReviewing, FakeStaffing, FakeAdmin {
   @override
   final Map<String, Map<String, Object?>> profiles = {};
+  @override
   final Set<String> locked = {};
 
   /// uid có token hết hạn → 401.
@@ -151,6 +153,8 @@ class FakeBackend with FakeOrdering, FakeReviewing, FakeStaffing {
       profiles[token] = profile;
       return jsonResponse(profile, 201);
     }
+    final adminResponse = handleAdmin(request, token);
+    if (adminResponse != null) return adminResponse;
     final staffResponse = handleStaffing(request);
     if (staffResponse != null) return staffResponse;
     final reviewResponse = handleReviewing(request, token);
