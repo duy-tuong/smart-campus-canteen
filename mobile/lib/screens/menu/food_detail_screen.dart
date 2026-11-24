@@ -389,11 +389,15 @@ class _OptionGroupView extends StatelessWidget {
         Row(
           children: [
             Expanded(child: Text(group.name, style: theme.textTheme.titleSmall)),
-            Text(
-              OptionSelection.ruleOf(group),
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: error != null ? context.appColors.warning : theme.colorScheme.onSurfaceVariant,
-                fontWeight: error != null ? FontWeight.w600 : null,
+            const SizedBox(width: AppSpacing.xs),
+            Flexible(
+              child: Text(
+                OptionSelection.ruleOf(group),
+                textAlign: TextAlign.end,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: error != null ? context.appColors.warning : theme.colorScheme.onSurfaceVariant,
+                  fontWeight: error != null ? FontWeight.w600 : null,
+                ),
               ),
             ),
           ],

@@ -268,11 +268,13 @@ class _UserTile extends StatelessWidget {
         opacity: user.isActive ? 1 : 0.5,
         child: UserAvatar(profile: user.asProfile, size: 44),
       ),
-      title: Row(
-        children: [
-          Flexible(child: Text(user.fullName, maxLines: 1, overflow: TextOverflow.ellipsis)),
-          if (isMe) ...[const SizedBox(width: AppSpacing.xs), Text('(bạn)', style: muted)],
-        ],
+      title: Text.rich(
+        TextSpan(
+          text: user.fullName,
+          children: [if (isMe) TextSpan(text: '  (bạn)', style: muted)],
+        ),
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
       ),
       subtitle: Text(
         [user.email, ?user.studentCode].join(' · '),

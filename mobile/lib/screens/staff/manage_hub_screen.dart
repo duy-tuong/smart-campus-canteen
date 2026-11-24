@@ -37,7 +37,8 @@ class ManageHubScreen extends StatelessWidget {
               crossAxisCount: columns,
               mainAxisSpacing: AppSpacing.sm,
               crossAxisSpacing: AppSpacing.sm,
-              mainAxisExtent: 96 * MediaQuery.textScalerOf(context).scale(14) / 14,
+              // Chiều cao ô tăng theo cỡ chữ hệ thống (tiêu đề + 2 dòng mô tả không bị cắt khi chữ 130%).
+              mainAxisExtent: 112 * MediaQuery.textScalerOf(context).scale(14) / 14,
             ),
             itemCount: items.length,
             itemBuilder: (context, i) {

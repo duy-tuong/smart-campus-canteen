@@ -163,12 +163,16 @@ class AppLogo extends StatelessWidget {
       height: size,
       decoration: BoxDecoration(
         color: primary,
-        borderRadius: BorderRadius.circular(size * 0.28),
+        borderRadius: BorderRadius.circular(size * 0.22),
         boxShadow: [
           BoxShadow(color: primary.withValues(alpha: 0.3), blurRadius: size * 0.3, offset: Offset(0, size * 0.1)),
         ],
       ),
-      child: Icon(Icons.lunch_dining_rounded, color: Colors.white, size: size * 0.56),
+      // Cùng một hình với icon app và màn chờ native (assets/branding, vẽ bằng tool/make_icon.py).
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(size * 0.22),
+        child: Image.asset('assets/branding/icon.png', width: size, height: size, filterQuality: FilterQuality.medium),
+      ),
     );
   }
 }

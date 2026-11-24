@@ -283,39 +283,44 @@ class _ToolBar extends StatelessWidget {
       padding: inline
           ? EdgeInsets.zero
           : const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.xs, AppSpacing.md, AppSpacing.xxs),
-      child: Row(
-        mainAxisSize: inline ? MainAxisSize.min : MainAxisSize.max,
-        children: [
-          ActionChip(
-            avatar: const Icon(Icons.swap_vert_rounded, size: 18),
-            label: Text(query.sort.label),
-            onPressed: () async {
-              final sort = await showModalBottomSheet<FoodSort>(
-                context: context,
-                builder: (_) => _SortSheet(current: query.sort),
-              );
-              if (sort != null) onChanged(query.copyWith(sort: sort));
-            },
-          ),
-          const SizedBox(width: AppSpacing.xs),
-          ActionChip(
-            avatar: Badge(
-              isLabelVisible: filters > 0,
-              label: Text('$filters'),
-              child: const Icon(Icons.tune_rounded, size: 18),
+      // Màn rất hẹp + chữ lớn: thu nhỏ nhẹ cả hàng (FittedBox) thay vì tràn.
+      child: FittedBox(
+        fit: BoxFit.scaleDown,
+        alignment: Alignment.centerLeft,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ActionChip(
+              avatar: const Icon(Icons.swap_vert_rounded, size: 18),
+              label: Text(query.sort.label),
+              onPressed: () async {
+                final sort = await showModalBottomSheet<FoodSort>(
+                  context: context,
+                  builder: (_) => _SortSheet(current: query.sort),
+                );
+                if (sort != null) onChanged(query.copyWith(sort: sort));
+              },
             ),
-            label: const Text('Lọc'),
-            onPressed: () async {
-              final result = await showModalBottomSheet<FoodQuery>(
-                context: context,
-                isScrollControlled: true,
-                builder: (_) => _FilterSheet(query: query),
-              );
-              if (result != null) onChanged(result);
-            },
-          ),
-          if (inline) const VerticalDivider(indent: AppSpacing.sm, endIndent: AppSpacing.sm, width: AppSpacing.md),
-        ],
+            const SizedBox(width: AppSpacing.xs),
+            ActionChip(
+              avatar: Badge(
+                isLabelVisible: filters > 0,
+                label: Text('$filters'),
+                child: const Icon(Icons.tune_rounded, size: 18),
+              ),
+              label: const Text('Lọc'),
+              onPressed: () async {
+                final result = await showModalBottomSheet<FoodQuery>(
+                  context: context,
+                  isScrollControlled: true,
+                  builder: (_) => _FilterSheet(query: query),
+                );
+                if (result != null) onChanged(result);
+              },
+            ),
+            if (inline) const VerticalDivider(indent: AppSpacing.sm, endIndent: AppSpacing.sm, width: AppSpacing.md),
+          ],
+        ),
       ),
     );
   }

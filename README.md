@@ -528,8 +528,10 @@ flutter run
 
 Địa chỉ backend khi chạy local:
 
-- Android Emulator: `http://10.0.2.2:5265`
-- Điện thoại thật cùng mạng Wi-Fi: `http://<IP-LAN-của-máy>:5265`
+- Android Emulator: `http://10.0.2.2:5265` (mặc định)
+- Điện thoại thật cùng mạng Wi-Fi: `http://<IP-LAN-của-máy>:5265`, đặt trong màn *Cài đặt máy chủ* của app
+
+Hướng dẫn đầy đủ nằm trong [mobile/README.md](mobile/README.md): cài APK lên điện thoại thật, mở cổng tường lửa, tài khoản demo, **bảng đối chiếu từng yêu cầu đề bài với file code**, kiểm thử (188 test) và build APK. Ảnh chụp màn hình ở [docs/screenshots](docs/screenshots).
 
 ## Deploy Firebase Security Rules
 

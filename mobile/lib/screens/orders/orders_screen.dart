@@ -256,12 +256,21 @@ class OrderCard extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  Text('#${order.pickupCode}', style: theme.textTheme.titleSmall),
-                  const SizedBox(width: AppSpacing.xs),
-                  StatusChip(order.status),
+                  // Màn hẹp + chữ lớn: chip trạng thái tự xuống dòng dưới mã đơn thay vì làm tràn.
+                  Expanded(
+                    child: Wrap(
+                      spacing: AppSpacing.xs,
+                      runSpacing: AppSpacing.xxs,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      children: [
+                        Text('#${order.pickupCode}', style: theme.textTheme.titleSmall),
+                        StatusChip(order.status),
+                      ],
+                    ),
+                  ),
                   const SizedBox(width: AppSpacing.xs),
                   // Thời gian co lại (… cuối) trên màn hẹp thay vì làm tràn dòng.
-                  Expanded(
+                  Flexible(
                     child: Text(
                       VnTime.relative(order.createdAt),
                       style: muted,

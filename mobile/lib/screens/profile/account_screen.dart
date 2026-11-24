@@ -182,9 +182,13 @@ class _Tag extends StatelessWidget {
         children: [
           Icon(icon, size: 14, color: color),
           const SizedBox(width: AppSpacing.xxs),
-          Text(
-            text,
-            style: Theme.of(context).textTheme.labelSmall?.copyWith(color: color, fontWeight: FontWeight.w600),
+          Flexible(
+            child: Text(
+              text,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.labelSmall?.copyWith(color: color, fontWeight: FontWeight.w600),
+            ),
           ),
         ],
       ),

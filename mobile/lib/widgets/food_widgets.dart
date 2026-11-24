@@ -74,7 +74,9 @@ class RatingLabel extends StatelessWidget {
           average.toStringAsFixed(1),
           style: theme.textTheme.bodySmall?.tabular.copyWith(fontWeight: FontWeight.w600),
         ),
-        Text(' ($count)', style: muted?.tabular),
+        Flexible(
+          child: Text(' ($count)', style: muted?.tabular, maxLines: 1, overflow: TextOverflow.clip),
+        ),
       ],
     );
   }
